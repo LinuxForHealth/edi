@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_CERT_PATH_BUILD_ARG: ./local-config/app
+        APP_CONFIG_PATH_BUILD_ARG: ./local-config/app
+    image: app:0.42.0
+    environment:
+      APP_CA_PATH: /usr/local/share/ca-certificates
+    ports:
+      - "5000:5000"
