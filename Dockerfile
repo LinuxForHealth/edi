@@ -1,7 +1,7 @@
 FROM python:3.9.4-alpine3.13
 
-ARG APP_CERT_PATH_BUILD_ARG="./local-config/app"
-ARG APP_CONFIG_PATH_BUILD_ARG="./local-config/app"
+ARG EDI_CERT_PATH_BUILD_ARG="./local-config/edi"
+ARG EDI_CONFIG_PATH_BUILD_ARG="./local-config/edi"
 
 # include build toolchain for linked c libraries
 RUN apk update && \
@@ -14,32 +14,32 @@ RUN apk update && \
 # install certificates
 # copy certificates and keys
 WORKDIR /usr/local/share/ca-certificates/
-COPY $APP_CERT_PATH_BUILD_ARG/*.pem ./
-COPY $APP_CERT_PATH_BUILD_ARG/*.key ./
+COPY $EDI_CERT_PATH_BUILD_ARG/*.pem ./
+COPY $EDI_CERT_PATH_BUILD_ARG/*.key ./
 RUN chmod 644 *.pem *.key
 RUN update-ca-certificates
 
 # configure the app
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup -h /home/appuser
+RUN addgroup -S lfh && adduser -S lfh -G lfh -h /home/lfh
 
-USER  appuser
+USER  lfh
 
-WORKDIR /home/appuser/app
+WORKDIR /home/lfh/edi
 # copy config files
 RUN mkdir config
-COPY --chown=appuser:appuser Pipfile.lock logging.yaml ./
+COPY --chown=lfh:lfh Pipfile.lock logging.yaml ./
 
 # configure application
-COPY --chown=appuser:appuser ./app ./app
+COPY --chown=lfh:lfh ./edi ./edi
 RUN python -m pip install --user --upgrade pip pipenv
-RUN /home/appuser/.local/bin/pipenv sync
+RUN /home/lfh/.local/bin/pipenv sync
 
 # hang onto dev packages until python libs are installed. Required for native dependencies.
 USER root
 RUN apk del .dev-packages
 
-USER appuser
+USER lfh
 EXPOSE 5000
-WORKDIR /home/appuser/app
+WORKDIR /home/lfh/edi
 ENV PYTHONPATH="."
-CMD ["/home/appuser/.local/bin/pipenv", "run", "python", "app/main.py"]
+CMD ["/home/lfh/.local/bin/pipenv", "run", "python", "edi/main.py"]

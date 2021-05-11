@@ -2,7 +2,7 @@
 *
 
 # now include specific items as our inclusions < our exclusions
-!app
+!edi
 !local-config
 !Pipfile.lock
 !logging.yaml

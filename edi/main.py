@@ -6,10 +6,10 @@ Bootstraps the Fast API application and Uvicorn processes
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 import uvicorn
-from app.config import get_settings
-from app.routes.api import router
-from app import __version__
-from app.server_handlers import (
+from edi.config import get_settings
+from edi.routes.api import router
+from edi import __version__
+from edi.server_handlers import (
     configure_logging,
     log_configuration,
     http_exception_handler,
@@ -29,8 +29,8 @@ def get_app() -> FastAPI:
     settings = get_settings()
 
     app = FastAPI(
-        title="Fast API Template App",
-        description="Fast API Application Quickstart",
+        title="LinuxForHealth EDI",
+        description="Detects, Parses, and Validates standard health care data formats",
         version=__version__,
     )
     app.add_middleware(HTTPSRedirectMiddleware)
@@ -42,7 +42,7 @@ def get_app() -> FastAPI:
     # use the slowapi rate limiter
     app.add_middleware(SlowAPIMiddleware)
     limiter = Limiter(
-        key_func=get_remote_address, default_limits=[settings.app_rate_limit]
+        key_func=get_remote_address, default_limits=[settings.edi_rate_limit]
     )
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -59,8 +59,8 @@ if __name__ == "__main__":
         "log_config": None,
         "port": settings.uvicorn_port,
         "reload": settings.uvicorn_reload,
-        "ssl_keyfile": os.path.join(settings.app_ca_path, settings.app_cert_key_name),
-        "ssl_certfile": os.path.join(settings.app_ca_path, settings.app_cert_name),
+        "ssl_keyfile": os.path.join(settings.edi_ca_path, settings.edi_cert_key_name),
+        "ssl_certfile": os.path.join(settings.edi_ca_path, settings.edi_cert_name),
     }
 
     uvicorn.run(**uvicorn_params)

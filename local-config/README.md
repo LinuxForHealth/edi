@@ -1,6 +1,6 @@
 # Local Configuration
 
-This project directory contains configuration tooling to support running {{ template }}, and it's dependent services locally for development use. Contents include:
+This project directory contains configuration tooling to support running edi, and it's dependent services locally for development use. Contents include:
 
 * install-certificates.sh - a shell script used to generate a locally trusted Root CA and self-signed certificates.
 * uninstall-certificates.sh - a shell script used to remove generated certificates.

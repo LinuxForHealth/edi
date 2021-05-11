@@ -4,9 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [scripts]
-app="python app/main.py"
-check-format="black -t py38 --check --diff app tests"
-format="black -t py38 app tests"
+edi="python edi/main.py"
+check-format="black -t py38 --check --diff edi tests"
+format="black -t py38 edi tests"
 
 [packages]
 fastapi = "*"

@@ -15,9 +15,9 @@ jobs:
         uses: actions/checkout@v2
       - name: Create Local Config Placeholders
         run: |
-          mkdir -p ./local-config/app
-          touch ./local-config/app/placeholder.pem
-          touch ./local-config/app/placeholder.key
+          mkdir -p ./local-config/edi
+          touch ./local-config/edi/placeholder.pem
+          touch ./local-config/edi/placeholder.key
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Cache Docker layers
@@ -31,9 +31,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          build-args: APPLICATION_BUILD_CERT_PATH=./local-config/certs
+          build-args: APP_CERT_PATH_BUILD_ARG=./local-config/edi
           push: false
-          tags: dixonwhitmire/fastapi-app:latest
+          tags: linuxforhealth/edi:ci-image-test
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
       - name: Move cache

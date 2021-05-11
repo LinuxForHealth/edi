@@ -3,7 +3,7 @@ test_status.py
 Tests the /status API endpoints
 """
 import pytest
-from app.config import get_settings
+from edi.config import get_settings
 
 
 @pytest.mark.asyncio
@@ -29,7 +29,7 @@ async def test_status_get(async_test_client, settings, monkeypatch):
             assert actual_json["elapsed_time"] > 0.0
 
             expected = {
-                "application": "app.asgi:app",
+                "application": "edi.asgi:edi",
                 "application_version": actual_json["application_version"],
                 "is_reload_enabled": False,
                 "elapsed_time": actual_json["elapsed_time"],

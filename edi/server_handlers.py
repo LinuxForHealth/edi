@@ -1,7 +1,7 @@
 import logging
 import logging.config
 import sys
-from app.config import get_settings
+from edi.config import get_settings
 import yaml
 from yaml import YAMLError
 import os
@@ -28,7 +28,7 @@ def add_trace_logging():
 
 def configure_logging() -> None:
     """
-    Configures logging for the {{ template }} application.
+    Configures logging for the edi application.
     Logging configuration is parsed from the setting/environment variable LOGGING_CONFIG_PATH, if present.
     If LOGGING_CONFIG_PATH is not found, a basic config is applied.
     """
@@ -44,13 +44,13 @@ def configure_logging() -> None:
 
     settings = get_settings()
 
-    if os.path.exists(settings.app_logging_config_path):
-        with open(settings.app_logging_config_path, "r") as f:
+    if os.path.exists(settings.edi_logging_config_path):
+        with open(settings.edi_logging_config_path, "r") as f:
             try:
                 logging_config = yaml.safe_load(f)
                 logging.config.dictConfig(logging_config)
                 logger.info(
-                    f"Loaded logging configuration from {settings.app_logging_config_path}"
+                    f"Loaded logging configuration from {settings.edi_logging_config_path}"
                 )
                 add_trace_logging()
             except YAMLError as e:
@@ -66,14 +66,14 @@ def configure_logging() -> None:
 
 def log_configuration() -> None:
     """
-    Logs {{ template }} configuration settings.
+    Logs edi configuration settings.
     Configuration settings are logged at DEBUG level.
     """
     settings = get_settings()
     header_footer_length = 50
 
     logger.debug("*" * header_footer_length)
-    logger.debug("App Configuration Settings")
+    logger.debug("EDI Configuration Settings")
     logger.debug("=" * header_footer_length)
     logger.debug(f"UVICORN_APP: {settings.uvicorn_app}")
     logger.debug(f"UVICORN_HOST: {settings.uvicorn_host}")
@@ -82,14 +82,14 @@ def log_configuration() -> None:
     logger.debug("=" * header_footer_length)
 
     logger.debug(f"CERTIFICATE_AUTHORITY_PATH: {settings.certificate_authority_path}")
-    logger.debug(f"LOGGING_CONFIG_PATH: {settings.app_logging_config_path}")
+    logger.debug(f"LOGGING_CONFIG_PATH: {settings.edi_logging_config_path}")
     logger.debug("=" * header_footer_length)
 
-    logger.debug(f"APP_CA_FILE: {settings.app_ca_file}")
-    logger.debug(f"APP_CA_PATH: {settings.app_ca_path}")
-    logger.debug(f"APP_CONFIG_DIRECTORY: {settings.app_config_directory}")
-    logger.debug(f"APP_CERT_NAME: {settings.app_cert_name}")
-    logger.debug(f"APP_CERT_KEY_NAME: {settings.app_cert_key_name}")
+    logger.debug(f"APP_CA_FILE: {settings.edi_ca_file}")
+    logger.debug(f"APP_CA_PATH: {settings.edi_ca_path}")
+    logger.debug(f"APP_CONFIG_DIRECTORY: {settings.edi_config_directory}")
+    logger.debug(f"APP_CERT_NAME: {settings.edi_cert_name}")
+    logger.debug(f"APP_CERT_KEY_NAME: {settings.edi_cert_key_name}")
     logger.debug("=" * header_footer_length)
 
     logger.debug("*" * header_footer_length)

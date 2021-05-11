@@ -6,8 +6,8 @@ Implements the system /status API endpoint
 from fastapi import Depends
 from fastapi.routing import APIRouter
 from pydantic.main import BaseModel
-from app import __version__
-from app.config import get_settings
+from edi import __version__
+from edi.config import get_settings
 import time
 
 router = APIRouter()
@@ -27,7 +27,7 @@ class StatusResponse(BaseModel):
     class Config:
         schema_extra = {
             "example": {
-                "application": "app.main:app",
+                "application": "edi.main:app",
                 "application_version": "0.25.0",
                 "is_reload_enabled": False,
                 "elapsed_time": 0.080413915000008,

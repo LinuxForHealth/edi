@@ -4,9 +4,9 @@ conftest.py
 Global PyTest fixtures
 """
 import pytest
-from app.config import Settings
+from edi.config import Settings
 from httpx import AsyncClient
-from app.main import get_app
+from edi.main import get_app
 
 
 @pytest.fixture
@@ -15,10 +15,10 @@ def settings() -> Settings:
     :return: Application Settings
     """
     settings_fields = {
-        "uvicorn_app": "app.asgi:app",
+        "uvicorn_app": "edi.asgi:edi",
         "uvicorn_reload": False,
-        "app_cert_key_name": "./test.key",
-        "app_cert_name": "./test.pem",
+        "edi_cert_key_name": "./edi-test.key",
+        "edi_cert_name": "./edi-test.pem",
     }
     return Settings(**settings_fields)
 

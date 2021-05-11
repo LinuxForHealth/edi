@@ -76,4 +76,4 @@ venv.bak/
 .DS_Store
 
 # Certificates
-local-config/app/*
+local-config/edi/*
