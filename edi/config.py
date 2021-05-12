@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     certificate_authority_path: str = certifi.where()
     certificate_verify: bool = False
 
-    # {{ edi }} settings
+    # edi settings
     edi_ca_file: str = certifi.where()
     edi_ca_path: str = None
     edi_cert_name: str = "edi-server.pem"

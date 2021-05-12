@@ -7,6 +7,7 @@ import pytest
 from edi.config import Settings
 from httpx import AsyncClient
 from edi.main import get_app
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture
@@ -24,10 +25,18 @@ def settings() -> Settings:
 
 
 @pytest.fixture
-def async_test_client(monkeypatch) -> AsyncClient:
+def async_test_client() -> AsyncClient:
     """
     Creates an HTTPX AsyncClient for async API testing
-    :param monkeypatch: monkeypatch fixture
     :return: HTTPX async test client
     """
     return AsyncClient(app=get_app(), base_url="http://testserver")
+
+
+@pytest.fixture
+def test_client() -> TestClient:
+    """
+    Creates a Fast API Test Client for API testing
+    :return: Fast API test client
+    """
+    return TestClient(get_app())
