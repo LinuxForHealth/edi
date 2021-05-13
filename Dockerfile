@@ -9,7 +9,8 @@ RUN apk update && \
     apk add --no-cache --virtual .dev-packages bash \
         build-base \
         curl \
-        openssl
+        openssl && \
+    apk add --no-cache libxslt-dev
 
 # install certificates
 # copy certificates and keys

@@ -208,7 +208,7 @@ def test_parse_statistics_fhir_json():
         "specification_version": "http://hl7.org/fhir",
         "implementation_versions": [
             "http://hl7.org/fhir/us/someprofile",
-            "http://hl7.org/fhir/us/otherprofile"
+            "http://hl7.org/fhir/us/otherprofile",
         ],
         "checksum": "abdfddcc98c5b57df07e778d2235d391ef5781f067eb84a8bd7413ca8b566002",
         "message_size": 309,

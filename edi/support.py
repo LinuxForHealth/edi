@@ -141,7 +141,7 @@ def _parse_fhir_json_stats(edi_message: str) -> EdiStatistics:
         "checksum": create_checksum(edi_message),
         "message_size": len(bytes(edi_message.encode("utf-8"))),
         "record_count": 1,
-        "specification_version": "http://hl7.org/fhir"
+        "specification_version": "http://hl7.org/fhir",
     }
 
     if fhir_data.get("resourceType", "").lower() == "bundle":
@@ -171,10 +171,12 @@ def _parse_fhir_xml_stats(edi_message: str) -> EdiStatistics:
         "checksum": create_checksum(edi_message),
         "message_size": len(bytes(edi_message.encode("utf-8"))),
         "record_count": 1,
-        "specification_version": "http://hl7.org/fhir"
+        "specification_version": "http://hl7.org/fhir",
     }
 
-    profile_elements = root_element.findall(namespace + "meta/" + namespace + "profile/[@value]")
+    profile_elements = root_element.findall(
+        namespace + "meta/" + namespace + "profile/[@value]"
+    )
     if profile_elements:
         stats["implementation_versions"] = [e.attrib["value"] for e in profile_elements]
 
