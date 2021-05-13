@@ -5,8 +5,10 @@ EDI utility functions for detecting formats and creating metadata statistics.
 """
 import json
 from json.decoder import JSONDecodeError
-from xml.etree.ElementTree import ParseError
-from xml.etree import ElementTree
+from lxml import etree
+from lxml.etree import ParseError
+# from xml.etree.ElementTree import ParseError
+# from xml.etree import ElementTree
 import logging
 from edi.models import EdiStatistics, EdiMessageType
 import hashlib
@@ -58,7 +60,7 @@ def _load_xml(edi_message: str):
     """
     edi_xml = None
     try:
-        edi_xml = ElementTree.fromstring(edi_message)
+        edi_xml = etree.fromstring(edi_message.encode("utf-8"))
     except ParseError:
         logger.exception("Error loading XML message")
     return edi_xml
@@ -141,14 +143,14 @@ def _parse_fhir_json_stats(edi_message: str) -> EdiStatistics:
         "checksum": create_checksum(edi_message),
         "message_size": len(bytes(edi_message.encode("utf-8"))),
         "record_count": 1,
-        "specification_version": "http://hl7.org/fhir",
-        "implementation_version": "http://hl7.org/fhir",
+        "specification_version": "http://hl7.org/fhir"
     }
 
     if fhir_data.get("resourceType", "").lower() == "bundle":
         record_count = len(fhir_data.get("entry", []))
         stats["record_count"] = record_count
 
+    stats["implementation_versions"] = fhir_data.get("meta", {}).get("profile")
     return EdiStatistics(**stats)
 
 
@@ -171,9 +173,12 @@ def _parse_fhir_xml_stats(edi_message: str) -> EdiStatistics:
         "checksum": create_checksum(edi_message),
         "message_size": len(bytes(edi_message.encode("utf-8"))),
         "record_count": 1,
-        "specification_version": "http://hl7.org/fhir",
-        "implementation_version": "http://hl7.org/fhir",
+        "specification_version": "http://hl7.org/fhir"
     }
+
+    profile_elements = root_element.findall(namespace + "meta/" + namespace + "profile/[@value]")
+    if profile_elements:
+        stats["implementation_versions"] = [e.attrib["value"] for e in profile_elements]
 
     if "bundle" in root_element.tag.lower():
         stats["record_count"] = len(root_element.findall(namespace + "entry"))
@@ -196,13 +201,12 @@ def _parse_delimited_edi_stats(edi_message: str) -> EdiStatistics:
         "record_count": len(edi_message.split("\r" if is_hl7(edi_message) else "\n")),
     }
 
-    version = (
-        _parse_hl7_version(edi_message)
-        if is_hl7(edi_message)
-        else _parse_x12_version(edi_message)
-    )
+    if is_hl7(edi_message):
+        version = _parse_hl7_version(edi_message)
+    else:
+        version = _parse_x12_version(edi_message)
+
     stats["specification_version"] = version
-    stats["implementation_version"] = version
 
     return EdiStatistics(**stats)
 

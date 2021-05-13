@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from enum import Enum
+from typing import List
 
 
 class EdiMessageType(str, Enum):
@@ -14,7 +15,7 @@ class EdiStatistics(BaseModel):
 
     message_type: EdiMessageType
     specification_version: str
-    implementation_version: str
+    implementation_versions: List[str] = None
     message_size: int
     record_count: int
     checksum: str
@@ -25,7 +26,7 @@ class EdiStatistics(BaseModel):
             "example": {
                 "message_type": "X12_270",
                 "specification_version": "005010X279A1",
-                "implementation_version": "005010X279A1",
+                "implementation_versions": ["Supplemental Payer Guide"],
                 "message_size": 509,
                 "record_count": 17,
                 "checksum": "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",

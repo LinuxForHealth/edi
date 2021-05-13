@@ -48,6 +48,12 @@ x12_message = "\n".join(
 fhir_json_message = json.dumps(
     {
         "resourceType": "Patient",
+        "meta": {
+            "profile": [
+                "http://hl7.org/fhir/us/someprofile",
+                "http://hl7.org/fhir/us/otherprofile",
+            ]
+        },
         "identifier": [{"system": "urn:oid:1.2.36.146.595.217.0.1", "value": "12345"}],
         "name": [{"family": "Duck", "given": ["Donald", "D."]}],
         "gender": "male",
@@ -59,6 +65,10 @@ fhir_xml_message = "".join(
     [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<Patient xmlns="http://hl7.org/fhir">',
+        "<meta>",
+        '<profile value="http://hl7.org/fhir/us/someprofile"/>',
+        '<profile value="http://hl7.org/fhir/us/otherprofile"/>',
+        "</meta>",
         "<identifier>",
         '<system value="urn:oid:1.2.36.146.595.217.0.1"/>',
         '<value value="12345"/>',
@@ -137,11 +147,11 @@ def test_is_fhir(edi_message, test_result):
         ),
         (
             fhir_json_message,
-            "4b2dbb52d23c582b36cc7198208fea5dca83347c0770faa6a2443c5e3bd85843",
+            "abdfddcc98c5b57df07e778d2235d391ef5781f067eb84a8bd7413ca8b566002",
         ),
         (
             fhir_xml_message,
-            "e6bc997159e4058f1e1fe63ecf92549ebf0fd18d7bd08e5e1eeb8dfa3874123e",
+            "c3331c97605865490503e779a697bdeeab5991517ce0655566e23e951b057dfe",
         ),
     ],
 )
@@ -153,7 +163,6 @@ def test_parse_statistics_hl7():
     expected_data = {
         "message_type": "HL7",
         "specification_version": "2.6",
-        "implementation_version": "2.6",
         "checksum": "dce92fa2bb05ba55f975dcef9e9615d45e33981c36d46895f349886a87364d60",
         "message_size": 884,
         "record_count": 8,
@@ -167,7 +176,6 @@ def test_parse_statistics_x12():
     expected_data = {
         "message_type": "X12",
         "specification_version": "005010X279A1",
-        "implementation_version": "005010X279A1",
         "checksum": "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",
         "message_size": 509,
         "record_count": 17,
@@ -181,9 +189,12 @@ def test_parse_statistics_fhir_xml():
     expected_data = {
         "message_type": "FHIR",
         "specification_version": "http://hl7.org/fhir",
-        "implementation_version": "http://hl7.org/fhir",
-        "checksum": "e6bc997159e4058f1e1fe63ecf92549ebf0fd18d7bd08e5e1eeb8dfa3874123e",
-        "message_size": 487,
+        "implementation_versions": [
+            "http://hl7.org/fhir/us/someprofile",
+            "http://hl7.org/fhir/us/otherprofile",
+        ],
+        "checksum": "c3331c97605865490503e779a697bdeeab5991517ce0655566e23e951b057dfe",
+        "message_size": 607,
         "record_count": 1,
     }
     expected_stats = EdiStatistics(**expected_data)
@@ -195,9 +206,12 @@ def test_parse_statistics_fhir_json():
     expected_data = {
         "message_type": "FHIR",
         "specification_version": "http://hl7.org/fhir",
-        "implementation_version": "http://hl7.org/fhir",
-        "checksum": "4b2dbb52d23c582b36cc7198208fea5dca83347c0770faa6a2443c5e3bd85843",
-        "message_size": 209,
+        "implementation_versions": [
+            "http://hl7.org/fhir/us/someprofile",
+            "http://hl7.org/fhir/us/otherprofile"
+        ],
+        "checksum": "abdfddcc98c5b57df07e778d2235d391ef5781f067eb84a8bd7413ca8b566002",
+        "message_size": 309,
         "record_count": 1,
     }
     expected_stats = EdiStatistics(**expected_data)
