@@ -6,10 +6,10 @@ Bootstraps the Fast API application and Uvicorn processes
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 import uvicorn
-from edi.config import get_settings
-from edi.routes.api import router
+from edi.api.config import get_settings
+from edi.api.routes.api import router
 from edi import __version__
-from edi.server_handlers import (
+from edi.api.server_handlers import (
     configure_logging,
     log_configuration,
     http_exception_handler,

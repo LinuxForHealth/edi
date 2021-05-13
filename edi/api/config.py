@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     """
 
     # uvicorn settings
-    uvicorn_app: str = "edi.asgi:app"
+    uvicorn_app: str = "edi.api.asgi:app"
     uvicorn_host: str = "0.0.0.0"
     uvicorn_port: int = 5000
     uvicorn_reload: bool = False

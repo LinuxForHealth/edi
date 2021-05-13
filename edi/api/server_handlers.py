@@ -1,7 +1,7 @@
 import logging
 import logging.config
 import sys
-from edi.config import get_settings
+from edi.api.config import get_settings
 import yaml
 from yaml import YAMLError
 import os

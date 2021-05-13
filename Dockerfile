@@ -43,4 +43,4 @@ USER lfh
 EXPOSE 5000
 WORKDIR /home/lfh/edi
 ENV PYTHONPATH="."
-CMD ["/home/lfh/.local/bin/pipenv", "run", "python", "edi/main.py"]
+CMD ["/home/lfh/.local/bin/pipenv", "run", "python3", "edi/api/main.py"]

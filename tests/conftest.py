@@ -4,9 +4,9 @@ conftest.py
 Global PyTest fixtures
 """
 import pytest
-from edi.config import Settings
+from edi.api.config import Settings
 from httpx import AsyncClient
-from edi.main import get_app
+from edi.api.main import get_app
 from fastapi.testclient import TestClient
 
 

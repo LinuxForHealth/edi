@@ -1,6 +1,6 @@
 import pytest
-from edi.support import is_hl7, is_x12, is_fhir, parse_statistics, create_checksum
-from edi.models import EdiStatistics
+from edi.core.support import is_hl7, is_x12, is_fhir, parse_statistics, create_checksum
+from edi.core.models import EdiStatistics
 import datetime
 import json
 

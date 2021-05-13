@@ -1,9 +1,8 @@
 """
-test_status.py
+test_status_api.py
 Tests the /status API endpoints
 """
-import pytest
-from edi.config import get_settings
+from edi.api.config import get_settings
 
 
 def test_status_get(test_client, settings):

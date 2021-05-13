@@ -8,7 +8,7 @@ from json.decoder import JSONDecodeError
 from lxml import etree
 from lxml.etree import ParseError
 import logging
-from edi.models import EdiStatistics, EdiMessageType
+from edi.core.models import EdiStatistics, EdiMessageType
 import hashlib
 from typing import Optional
 

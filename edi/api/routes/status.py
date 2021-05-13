@@ -6,8 +6,8 @@ Implements the system /status API endpoint
 from fastapi import Depends
 from fastapi.routing import APIRouter
 from edi import __version__
-from edi.config import get_settings
-from edi.models import StatusResponse
+from edi.api.config import get_settings
+from edi.core.models import StatusResponse
 
 router = APIRouter()
 
