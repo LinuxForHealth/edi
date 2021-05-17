@@ -1,18 +1,70 @@
 """
 support.py
-
-EDI utility functions for detecting formats and creating metadata statistics.
 """
-import json
-from json.decoder import JSONDecodeError
-from lxml import etree
-from lxml.etree import ParseError
-import logging
-from edi.core.models import EdiStatistics, EdiMessageType
 import hashlib
-from typing import Optional
+import json
+from json import JSONDecodeError
+from typing import Union, Optional, Tuple
+from lxml import etree
+from lxml.etree import ParseError, _Element
+import logging
+
 
 logger = logging.getLogger(__name__)
+
+FHIR_SPECIFICATION_URL = "http://hl7.org/fhir"
+
+
+def load_json(edi_message: str) -> dict:
+    """
+    Attempts to load the EDI message as a JSON object.
+    Returns the JSON object if successful, otherwise None.
+    :param edi_message: the input edi message
+    :returns: The JSON object (dictionary) or None
+    """
+    try:
+        edi_json = json.loads(edi_message)
+    except JSONDecodeError:
+        logger.exception("Error loading JSON message")
+        raise
+
+    return edi_json
+
+
+def load_xml(edi_message: str):
+    """
+    Attempts to load the EDI message as a XML object.
+    Returns the XML object if successful, otherwise None.
+    :param edi_message: the input edi message
+    :returns: The XML object  or None
+    """
+    try:
+        edi_xml = etree.fromstring(edi_message.encode("utf-8"))
+    except ParseError:
+        logger.exception("Error loading XML message")
+        raise
+    return edi_xml
+
+
+def is_fhir(edi_message: str) -> bool:
+    """
+    Returns True if the EDI message is a FHIR message either XML or JSON.
+    A True result does not indicate that the edi message is valid, rather that it appears to be a FHIR message and may
+    be parsed.
+    """
+    if not edi_message:
+        return False
+
+    edi_first_char = edi_message.lstrip()[0:1]
+
+    if edi_first_char == "{":
+        edi_json = load_json(edi_message)
+        return bool(edi_json.get("resourceType"))
+    elif edi_first_char == "<":
+        edi_xml = load_xml(edi_message)
+        return "http://hl7.org/fhir" in edi_xml.tag.lower()
+    else:
+        return False
 
 
 def is_hl7(edi_message: str) -> bool:
@@ -33,58 +85,6 @@ def is_x12(edi_message: str) -> bool:
     return isinstance(edi_message, str) and edi_message[0:3] == "ISA"
 
 
-def _load_json(edi_message: str) -> dict:
-    """
-    Attempts to load the EDI message as a JSON object.
-    Returns the JSON object if successful, otherwise None.
-    :param edi_message: the input edi message
-    :returns: The JSON object (dictionary) or None
-    """
-    edi_json = None
-    try:
-        edi_json = json.loads(edi_message)
-    except JSONDecodeError:
-        logger.exception("Error loading JSON message")
-
-    return edi_json
-
-
-def _load_xml(edi_message: str):
-    """
-    Attempts to load the EDI message as a XML object.
-    Returns the XML object if successful, otherwise None.
-    :param edi_message: the input edi message
-    :returns: The XML object  or None
-    """
-    edi_xml = None
-    try:
-        edi_xml = etree.fromstring(edi_message.encode("utf-8"))
-    except ParseError:
-        logger.exception("Error loading XML message")
-    return edi_xml
-
-
-def is_fhir(edi_message: str) -> bool:
-    """
-    Returns True if the EDI message is a FHIR message either XML or JSON.
-    A True result does not indicate that the edi message is valid, rather that it appears to be a FHIR message and may
-    be parsed.
-    """
-    if not edi_message:
-        return False
-
-    edi_first_char = edi_message.lstrip()[0:1]
-
-    if edi_first_char == "{":
-        edi_json = _load_json(edi_message)
-        return bool(edi_json.get("resourceType"))
-    elif edi_first_char == "<":
-        edi_xml = _load_xml(edi_message)
-        return "http://hl7.org/fhir" in edi_xml.tag.lower()
-    else:
-        return False
-
-
 def create_checksum(edi_message: str) -> str:
     """
     Creates a SHA-256 checksum for an EDI message.
@@ -92,6 +92,84 @@ def create_checksum(edi_message: str) -> str:
     :returns: The SHA-256 checksum as a hex digest
     """
     return hashlib.sha256(edi_message.encode("utf-8")).hexdigest()
+
+
+def load_fhir(edi_message: str) -> Union[dict, _Element]:
+    """
+    Loads a FHIR Message from a string.
+    FHIR supports XML and JSON formats. The format used is dictated by the input string.
+    :param edi_message: The input edi message
+    :returns: FHIR as a XML or JSON resource
+    """
+    if not is_fhir(edi_message) or not any(
+        (edi_message.startswith("<"), edi_message.startswith("{"))
+    ):
+        raise ValueError("Invalid FHIR Message")
+
+    if edi_message.lstrip().startswith("<"):
+        return load_xml(edi_message)
+    else:
+        return load_json(edi_message)
+
+
+def parse_version(edi_message: str) -> Optional[Tuple[str]]:
+    """
+    Parses version information from an EDI message.
+    Version information is returned as a tuple. The first entry is the specification version. Additional entries, if
+    found, are the implementation versions.
+
+    :param edi_message: The input edi message
+    :returns: Tuple of version info.
+    """
+    parsed_version = None
+
+    if is_hl7(edi_message):
+        parsed_version = (_parse_hl7_version(edi_message),)
+    elif is_x12(edi_message):
+        parsed_version = (_parse_x12_version(edi_message),)
+    elif is_fhir(edi_message):
+        fhir_data = load_fhir(edi_message)
+        parsed_version = _parse_fhir_version(fhir_data)
+
+    return parsed_version
+
+
+def get_namespace(xml_root: _Element) -> Optional[str]:
+    """Returns the XML namespace for a root element"""
+    namespace = None
+
+    if "}" in xml_root.tag:
+        tag_value = xml_root.tag
+        end_index = tag_value.find("}") + 1
+        namespace = tag_value[0:end_index]
+
+    return namespace
+
+
+def _parse_fhir_version(edi_message: Union[dict, _Element]) -> Tuple[str]:
+    """
+    Parses FHIR Version Information from a resource.
+    "Version" information includes URL/URIs which point to the core specification and optional profiles.
+    :param edi_message: The input edi message
+    :returns: tuple(core version, profile, profile, profile, etc)
+    """
+    profiles = [FHIR_SPECIFICATION_URL]
+
+    if isinstance(edi_message, dict):
+        profiles += edi_message.get("meta", {}).get("profile", [])
+    else:
+        namespace = get_namespace(edi_message)
+        if not namespace:
+            namespace = ""
+
+        profile_elements = edi_message.findall(
+            namespace + "meta/" + namespace + "profile/[@value]"
+        )
+
+        if profile_elements:
+            profiles += [e.attrib["value"] for e in profile_elements]
+
+    return tuple(profiles)
 
 
 def _parse_hl7_version(edi_message: str) -> Optional[str]:
@@ -126,102 +204,3 @@ def _parse_x12_version(edi_message: str) -> Optional[str]:
     delimiter = gs_segment[2:3]
     version = gs_segment.split(delimiter)[8]
     return version
-
-
-def _parse_fhir_json_stats(edi_message: str) -> EdiStatistics:
-    """
-    Parses a FHIR JSON message to generate EDI Statistics.
-    :param edi_message: The input EDI message
-    :returns: EdiStatistics
-    """
-    fhir_data = _load_json(edi_message)
-
-    stats = {
-        "message_type": EdiMessageType.FHIR,
-        "checksum": create_checksum(edi_message),
-        "message_size": len(bytes(edi_message.encode("utf-8"))),
-        "record_count": 1,
-        "specification_version": "http://hl7.org/fhir",
-    }
-
-    if fhir_data.get("resourceType", "").lower() == "bundle":
-        record_count = len(fhir_data.get("entry", []))
-        stats["record_count"] = record_count
-
-    stats["implementation_versions"] = fhir_data.get("meta", {}).get("profile")
-    return EdiStatistics(**stats)
-
-
-def _parse_fhir_xml_stats(edi_message: str) -> EdiStatistics:
-    """
-    Parses a FHIR XML message to generate EDI Statistics.
-    :param edi_message: The input EDI message
-    :returns: EdiStatistics
-    """
-    root_element = _load_xml(edi_message)
-    namespace = ""
-
-    if "}" in root_element.tag:
-        tag_value = root_element.tag
-        end_index = tag_value.find("}") + 1
-        namespace = tag_value[0:end_index]
-
-    stats = {
-        "message_type": EdiMessageType.FHIR,
-        "checksum": create_checksum(edi_message),
-        "message_size": len(bytes(edi_message.encode("utf-8"))),
-        "record_count": 1,
-        "specification_version": "http://hl7.org/fhir",
-    }
-
-    profile_elements = root_element.findall(
-        namespace + "meta/" + namespace + "profile/[@value]"
-    )
-    if profile_elements:
-        stats["implementation_versions"] = [e.attrib["value"] for e in profile_elements]
-
-    if "bundle" in root_element.tag.lower():
-        stats["record_count"] = len(root_element.findall(namespace + "entry"))
-
-    return EdiStatistics(**stats)
-
-
-def _parse_delimited_edi_stats(edi_message: str) -> EdiStatistics:
-    """
-    Parses a delimited EDI message to generate EDI statistics
-    :param edi_message: The input EDI message
-    :returns: EdiStatistics
-    """
-    stats = {
-        "message_type": EdiMessageType.HL7
-        if is_hl7(edi_message)
-        else EdiMessageType.X12,
-        "checksum": create_checksum(edi_message),
-        "message_size": len(bytes(edi_message.encode("utf-8"))),
-        "record_count": len(edi_message.split("\r" if is_hl7(edi_message) else "\n")),
-    }
-
-    if is_hl7(edi_message):
-        version = _parse_hl7_version(edi_message)
-    else:
-        version = _parse_x12_version(edi_message)
-
-    stats["specification_version"] = version
-
-    return EdiStatistics(**stats)
-
-
-def parse_statistics(edi_message: str) -> EdiStatistics:
-    """
-    Parses EDI statistics from an input message.
-    :param edi_message: The input edi message
-    :returns: EdiStatistics
-    """
-    if is_hl7(edi_message) or is_x12(edi_message):
-        return _parse_delimited_edi_stats(edi_message)
-    elif is_fhir(edi_message) and edi_message.lstrip().startswith("<"):
-        return _parse_fhir_xml_stats(edi_message)
-    elif is_fhir(edi_message) and edi_message.lstrip().startswith("{"):
-        return _parse_fhir_json_stats(edi_message)
-    else:
-        raise ValueError("Unable to determine EDI message type")
