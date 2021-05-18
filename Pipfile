@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [scripts]
-edi="python3 edi/api/main.py"
+edi-server="python3 edi/api/main.py"
 check-format="black -t py38 --check --diff edi tests"
 format="black -t py38 edi tests"
 

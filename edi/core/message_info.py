@@ -1,7 +1,7 @@
 """
-stats.py
+message_info.py
 
-EDI utility functions for detecting formats and creating metadata statistics.
+Functions used to generate EDI message information or metadata.
 """
 from edi.core.support import (
     is_fhir,
@@ -13,14 +13,14 @@ from edi.core.support import (
     get_namespace,
     parse_version,
 )
-from edi.core.models import EdiStatistics, EdiMessageType
+from edi.core.models import EdiMessageInfo, EdiMessageType
 
 
-def _parse_fhir_xml_stats(edi_message: str) -> EdiStatistics:
+def _parse_fhir_xml(edi_message: str) -> EdiMessageInfo:
     """
-    Parses a FHIR XML message to generate EDI Statistics.
+    Parses a FHIR XML message to generate EdiMessageInfo
     :param edi_message: The input EDI message
-    :returns: EdiStatistics
+    :returns: EdiMessageInfo
     """
     root_element = load_xml(edi_message)
     namespace = get_namespace(root_element)
@@ -45,14 +45,14 @@ def _parse_fhir_xml_stats(edi_message: str) -> EdiStatistics:
     if "bundle" in root_element.tag.lower():
         stats["record_count"] = len(root_element.findall(namespace + "entry"))
 
-    return EdiStatistics(**stats)
+    return EdiMessageInfo(**stats)
 
 
-def _parse_delimited_edi_stats(edi_message: str) -> EdiStatistics:
+def _parse_delimited_edi(edi_message: str) -> EdiMessageInfo:
     """
-    Parses a delimited EDI message to generate EDI statistics
+    Parses a delimited EDI message to generate EdiMessageInfo
     :param edi_message: The input EDI message
-    :returns: EdiStatistics
+    :returns: EdiMessageInfo
     """
     stats = {
         "checksum": create_checksum(edi_message),
@@ -71,14 +71,14 @@ def _parse_delimited_edi_stats(edi_message: str) -> EdiStatistics:
 
     stats["message_type"] = message_type
 
-    return EdiStatistics(**stats)
+    return EdiMessageInfo(**stats)
 
 
-def _parse_fhir_json_stats(edi_message: str) -> EdiStatistics:
+def _parse_fhir_json(edi_message: str) -> EdiMessageInfo:
     """
-    Parses a FHIR JSON message to generate EDI Statistics.
+    Parses a FHIR JSON message to generate EdiMessageInfo
     :param edi_message: The input EDI message
-    :returns: EdiStatistics
+    :returns: EdiMessageInfo
     """
     fhir_data = load_json(edi_message)
 
@@ -95,20 +95,20 @@ def _parse_fhir_json_stats(edi_message: str) -> EdiStatistics:
         stats["record_count"] = record_count
 
     stats["implementation_versions"] = fhir_data.get("meta", {}).get("profile")
-    return EdiStatistics(**stats)
+    return EdiMessageInfo(**stats)
 
 
-def parse_statistics(edi_message: str) -> EdiStatistics:
+def parse_message(edi_message: str) -> EdiMessageInfo:
     """
-    Parses EDI statistics from an input message.
+    Parses an EDI message to generate EdiMessageInfo
     :param edi_message: The input edi message
-    :returns: EdiStatistics
+    :returns: EdiMessageInfo
     """
     if is_hl7(edi_message) or is_x12(edi_message):
-        return _parse_delimited_edi_stats(edi_message)
+        return _parse_delimited_edi(edi_message)
     elif is_fhir(edi_message) and edi_message.lstrip().startswith("<"):
-        return _parse_fhir_xml_stats(edi_message)
+        return _parse_fhir_xml(edi_message)
     elif is_fhir(edi_message) and edi_message.lstrip().startswith("{"):
-        return _parse_fhir_json_stats(edi_message)
+        return _parse_fhir_json(edi_message)
     else:
         raise ValueError("Unable to determine EDI message type")

@@ -1,8 +1,8 @@
-from edi.core.stats import parse_statistics
-from edi.core.models import EdiStatistics
+from edi.core.message_info import parse_message
+from edi.core.models import EdiMessageInfo
 
 
-def test_parse_statistics_hl7(hl7_message):
+def test_parse_message_hl7(hl7_message):
     expected_data = {
         "message_type": "HL7",
         "specification_version": "2.6",
@@ -10,12 +10,12 @@ def test_parse_statistics_hl7(hl7_message):
         "message_size": 884,
         "record_count": 8,
     }
-    expected_stats = EdiStatistics(**expected_data)
-    actual_stats = parse_statistics(hl7_message)
+    expected_stats = EdiMessageInfo(**expected_data)
+    actual_stats = parse_message(hl7_message)
     assert actual_stats.dict() == expected_stats.dict()
 
 
-def test_parse_statistics_x12(x12_message):
+def test_parse_message_x12(x12_message):
     expected_data = {
         "message_type": "X12",
         "specification_version": "005010X279A1",
@@ -23,12 +23,12 @@ def test_parse_statistics_x12(x12_message):
         "message_size": 509,
         "record_count": 17,
     }
-    expected_stats = EdiStatistics(**expected_data)
-    actual_stats = parse_statistics(x12_message)
+    expected_stats = EdiMessageInfo(**expected_data)
+    actual_stats = parse_message(x12_message)
     assert actual_stats.dict() == expected_stats.dict()
 
 
-def test_parse_statistics_fhir_xml(fhir_xml_message):
+def test_parse_message_fhir_xml(fhir_xml_message):
     expected_data = {
         "message_type": "FHIR",
         "specification_version": "http://hl7.org/fhir",
@@ -40,12 +40,12 @@ def test_parse_statistics_fhir_xml(fhir_xml_message):
         "message_size": 607,
         "record_count": 1,
     }
-    expected_stats = EdiStatistics(**expected_data)
-    actual_stats = parse_statistics(fhir_xml_message)
+    expected_stats = EdiMessageInfo(**expected_data)
+    actual_stats = parse_message(fhir_xml_message)
     assert actual_stats.dict() == expected_stats.dict()
 
 
-def test_parse_statistics_fhir_json(fhir_json_message):
+def test_parse_message_fhir_json(fhir_json_message):
     expected_data = {
         "message_type": "FHIR",
         "specification_version": "http://hl7.org/fhir",
@@ -57,6 +57,6 @@ def test_parse_statistics_fhir_json(fhir_json_message):
         "message_size": 309,
         "record_count": 1,
     }
-    expected_stats = EdiStatistics(**expected_data)
-    actual_stats = parse_statistics(fhir_json_message)
+    expected_stats = EdiMessageInfo(**expected_data)
+    actual_stats = parse_message(fhir_json_message)
     assert actual_stats.dict() == expected_stats.dict()
