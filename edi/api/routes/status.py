@@ -25,7 +25,7 @@ def get_status(settings=Depends(get_settings)):
     """
     status_fields = {
         "application": settings.uvicorn_app,
-        "application_version": __version__,
-        "is_reload_enabled": settings.uvicorn_reload,
+        "applicationVersion": __version__,
+        "isReloadEnabled": settings.uvicorn_reload,
     }
     return StatusResponse(**status_fields)

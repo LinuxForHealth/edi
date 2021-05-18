@@ -19,11 +19,11 @@ def test_status_get(test_client, settings):
         assert actual_response.status_code == 200
 
         actual_json = actual_response.json()
-        assert "application_version" in actual_json
+        assert "applicationVersion" in actual_json
 
         expected = {
             "application": "edi.asgi:edi",
-            "application_version": actual_json["application_version"],
-            "is_reload_enabled": False,
+            "applicationVersion": actual_json["applicationVersion"],
+            "isReloadEnabled": False,
         }
         assert actual_json == expected

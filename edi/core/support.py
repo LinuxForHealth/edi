@@ -1,5 +1,7 @@
 """
 support.py
+
+Utility functions used for loading and parsing EDI data
 """
 import hashlib
 import json

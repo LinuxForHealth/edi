@@ -1,43 +1,146 @@
+"""
+models.py
+"""
 from pydantic import BaseModel
 from enum import Enum
 from typing import List
 
 
+class EdiOperations(str, Enum):
+    """
+    Supported EDI Operations
+    """
+
+    STATS = "STATS"
+    VALIDATE = "VALIDATE"
+    TRANSFORM = "TRANSFORM"
+
+
 class EdiMessageType(str, Enum):
+    """
+    Supported EDI Message Types
+    """
+
     CCDA = "CCDA"
     FHIR = "FHIR"
     HL7 = "HL7"
     X12 = "X12"
 
 
-class EdiMessageInfo(BaseModel):
+class EdiMessageMetadata(BaseModel):
+    """
+    EDI message metadata including the message type, version, record count, etc.
     """
 
-    """
-
-    message_type: EdiMessageType
-    specification_version: str
-    implementation_versions: List[str] = None
-    message_size: int
-    record_count: int
+    messageType: EdiMessageType
+    specificationVersion: str
+    implementationVersions: List[str] = None
+    messageSize: int
+    recordCount: int
     checksum: str
 
     class Config:
-        allow_mutation = False
         schema_extra = {
             "example": {
-                "message_type": "X12_270",
-                "specification_version": "005010X279A1",
-                "implementation_versions": ["Supplemental Payer Guide"],
-                "message_size": 509,
-                "record_count": 17,
+                "messageType": "X12",
+                "specificationVersion": "005010X279A1",
+                "implementationVersions": ["Supplemental Payer Guide"],
+                "messageSize": 509,
+                "recordCount": 17,
                 "checksum": "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",
             }
         }
 
 
-class EdiMetadata(BaseModel):
-    pass
+class EdiProcessingMetrics(BaseModel):
+    """
+    Captures processing metrics for EDI operations
+    """
+
+    operations: List[EdiOperations]
+    statsTime: float = 0.0
+    validationTime: float = 0.0
+    transformTime: float = 0.0
+
+    @property
+    def total_time(self) -> float:
+        """Returns the total processing time"""
+        return self.statsTime + self.validationTime + self.transformTime
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "operations": ["STATS", "VALIDATE", "TRANSFORM"],
+                "statsTime": 0.142347273,
+                "validationTime": 0.013415911,
+                "transformTime": 2.625179046,
+            }
+        }
+
+
+class EdiTransformedMessage(BaseModel):
+    """
+    Supports EDI transformation output and metadata.
+    """
+
+    message: str
+    metadata: EdiMessageMetadata
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "message": "EDI-MESSAGE",
+                "metadata": {
+                    "messageType": "X12",
+                    "specificationVersion": "005010X279A1",
+                    "implementationVersions": ["Supplemental Payer Guide"],
+                    "messageSize": 509,
+                    "recordCount": 17,
+                    "checksum": "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",
+                },
+            }
+        }
+
+
+class EdiResult(BaseModel):
+    """
+    EDI Processing Result
+    """
+
+    metadata: EdiMessageMetadata
+    metrics: EdiProcessingMetrics
+    errors: List[dict] = []
+    transformedMessage: EdiTransformedMessage
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "metadata": {
+                    "messageType": "HL7",
+                    "specificationVersion": "2.6",
+                    "messageSize": 509,
+                    "recordCount": 17,
+                    "checksum": "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",
+                },
+                "metrics": {
+                    "operations": ["STATS", "VALIDATE", "TRANSFORM"],
+                    "statsTime": 0.142347273,
+                    "validationTime": 0.013415911,
+                    "transformTime": 2.625179046,
+                },
+                "errors": [],
+                "transformedMessage": {
+                    "message": '{resourceType": "Patient", "id": "001", "active": true}',
+                    "metadata": {
+                        "messageType": "FHIR",
+                        "specificationVersion": "http://hl7.org/fhir",
+                        "messageSize": 200,
+                        "recordCount": 1,
+                        "checksum": "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",
+                    },
+                },
+            }
+        }
 
 
 class StatusResponse(BaseModel):
@@ -47,15 +150,15 @@ class StatusResponse(BaseModel):
     """
 
     application: str
-    application_version: str
-    is_reload_enabled: bool
+    applicationVersion: str
+    isReloadEnabled: bool
 
     class Config:
         allow_mutation = False
         schema_extra = {
             "example": {
                 "application": "edi.main:app",
-                "application_version": "0.25.0",
-                "is_reload_enabled": False,
+                "applicationVersion": "0.25.0",
+                "isReloadEnabled": False,
             }
         }
