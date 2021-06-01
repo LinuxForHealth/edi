@@ -17,6 +17,7 @@ slowapi = "*"
 uvicorn = {extras = ["standard"], version = "*"}
 httpx = "*"
 lxml = "*"
+xworkflows = "*"
 
 [dev-packages]
 pytest = "*"

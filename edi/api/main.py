@@ -26,7 +26,7 @@ def get_app() -> FastAPI:
     Creates the Fast API application instance
     :return: The application instance
     """
-    edi_settings = get_settings()
+    settings = get_settings()
 
     app = FastAPI(
         title="LinuxForHealth EDI",
@@ -42,7 +42,7 @@ def get_app() -> FastAPI:
     # use the slowapi rate limiter
     app.add_middleware(SlowAPIMiddleware)
     limiter = Limiter(
-        key_func=get_remote_address, default_limits=[edi_settings.edi_rate_limit]
+        key_func=get_remote_address, default_limits=[settings.edi_rate_limit]
     )
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -51,19 +51,19 @@ def get_app() -> FastAPI:
 
 
 if __name__ == "__main__":
-    edi_settings = get_settings()
+    app_settings = get_settings()
 
     uvicorn_params = {
-        "app": edi_settings.uvicorn_app,
-        "host": edi_settings.uvicorn_host,
+        "app": app_settings.uvicorn_app,
+        "host": app_settings.uvicorn_host,
         "log_config": None,
-        "port": edi_settings.uvicorn_port,
-        "reload": edi_settings.uvicorn_reload,
+        "port": app_settings.uvicorn_port,
+        "reload": app_settings.uvicorn_reload,
         "ssl_keyfile": os.path.join(
-            edi_settings.edi_ca_path, edi_settings.edi_cert_key_name
+            app_settings.edi_ca_path, app_settings.edi_cert_key_name
         ),
         "ssl_certfile": os.path.join(
-            edi_settings.edi_ca_path, edi_settings.edi_cert_name
+            app_settings.edi_ca_path, app_settings.edi_cert_name
         ),
     }
 
