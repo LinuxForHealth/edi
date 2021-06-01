@@ -19,6 +19,7 @@ class EdiWorkflow(xworkflows.Workflow):
         <li>cancel - terminates the EDI workflow. May be used at any state prior to transmit.</li>
     </ul>
     """
+
     states = (
         ("init", "Initial State"),
         ("classified", "Classify Message"),
@@ -26,7 +27,7 @@ class EdiWorkflow(xworkflows.Workflow):
         ("validated", "Validate Message"),
         ("transmitted", "Transmit Message"),
         ("completed", "Processing Complete"),
-        ("cancelled", "Processing Cancelled")
+        ("cancelled", "Processing Cancelled"),
     )
 
     transitions = (
@@ -35,7 +36,7 @@ class EdiWorkflow(xworkflows.Workflow):
         ("validate", "transformed", "validated"),
         ("transmit", "validated", "transmitted"),
         ("complete", "transmitted", "completed"),
-        ("cancel", ("classified", "transformed", "validated"), "cancelled")
+        ("cancel", ("classified", "transformed", "validated"), "cancelled"),
     )
 
     initial_state = "init"
@@ -48,6 +49,7 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
     The EdiProcessor and its subclasses use the transition methods defined in the EdiWorkflow to support workflow
     processing.
     """
+
     state = EdiWorkflow()
 
     def __init__(self, message):

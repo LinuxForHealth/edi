@@ -26,4 +26,3 @@ def test_workflow_cancel(hl7_message):
     edi.classify()
     edi.cancel()
     assert edi.state == "cancelled"
-
