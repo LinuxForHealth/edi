@@ -11,7 +11,7 @@ class EdiOperations(str, Enum):
     Supported EDI Operations
     """
 
-    STATS = "STATS"
+    ANALYZE = "ANALYZE"
     VALIDATE = "VALIDATE"
     TRANSFORM = "TRANSFORM"
 
@@ -21,7 +21,6 @@ class EdiMessageType(str, Enum):
     Supported EDI Message Types
     """
 
-    CCDA = "CCDA"
     FHIR = "FHIR"
     HL7 = "HL7"
     X12 = "X12"
@@ -58,46 +57,22 @@ class EdiProcessingMetrics(BaseModel):
     """
 
     operations: List[EdiOperations]
-    statsTime: float = 0.0
+    analyzeTime: float = 0.0
     validationTime: float = 0.0
     transformTime: float = 0.0
 
     @property
     def total_time(self) -> float:
         """Returns the total processing time"""
-        return self.statsTime + self.validationTime + self.transformTime
+        return self.analyzeTime + self.validationTime + self.transformTime
 
     class Config:
         schema_extra = {
             "example": {
-                "operations": ["STATS", "VALIDATE", "TRANSFORM"],
-                "statsTime": 0.142347273,
+                "operations": ["ANALYZE", "VALIDATE", "TRANSFORM"],
+                "analyzeTime": 0.142347273,
                 "validationTime": 0.013415911,
                 "transformTime": 2.625179046,
-            }
-        }
-
-
-class EdiTransformedMessage(BaseModel):
-    """
-    Supports EDI transformation output and metadata.
-    """
-
-    message: str
-    metadata: EdiMessageMetadata
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "message": "EDI-MESSAGE",
-                "metadata": {
-                    "messageType": "X12",
-                    "specificationVersion": "005010X279A1",
-                    "implementationVersions": ["Supplemental Payer Guide"],
-                    "messageSize": 509,
-                    "recordCount": 17,
-                    "checksum": "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",
-                },
             }
         }
 
@@ -110,7 +85,6 @@ class EdiResult(BaseModel):
     metadata: EdiMessageMetadata
     metrics: EdiProcessingMetrics
     errors: List[dict] = []
-    transformedMessage: EdiTransformedMessage
 
     class Config:
         schema_extra = {
@@ -123,22 +97,12 @@ class EdiResult(BaseModel):
                     "checksum": "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",
                 },
                 "metrics": {
-                    "operations": ["STATS", "VALIDATE", "TRANSFORM"],
-                    "statsTime": 0.142347273,
+                    "operations": ["ANALYZE", "VALIDATE", "TRANSFORM"],
+                    "analyzeTime": 0.142347273,
                     "validationTime": 0.013415911,
                     "transformTime": 2.625179046,
                 },
                 "errors": [],
-                "transformedMessage": {
-                    "message": '{resourceType": "Patient", "id": "001", "active": true}',
-                    "metadata": {
-                        "messageType": "FHIR",
-                        "specificationVersion": "http://hl7.org/fhir",
-                        "messageSize": 200,
-                        "recordCount": 1,
-                        "checksum": "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",
-                    },
-                },
             }
         }
 

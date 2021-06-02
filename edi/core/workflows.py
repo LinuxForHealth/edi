@@ -1,5 +1,7 @@
 import xworkflows
 from xworkflows import transition
+from typing import Any, Optional
+from edi.core.models import EdiMessageMetadata
 
 
 class EdiWorkflow(xworkflows.Workflow):
@@ -9,9 +11,9 @@ class EdiWorkflow(xworkflows.Workflow):
     States are used to specify the current state of processing, while transitions are methods which perform a task and
     then update the state. The EdiWorkflow is used within an EdiProcess to process an EDI message.
 
-    The transitions in the EDI workflow include:
+    Transitions in the EDI workflow include:
     <ul>
-        <li>classify - generates EDI Message metadata.</li>
+        <li>analyze - generates EDI Message metadata.</li>
         <li>transform- used to enrich the input message in its current format, or transform the message to a different format.</li>
         <li>validate - validates the message.</li>
         <li>transmit - transmits the EDI message to an external system.</li>
@@ -22,7 +24,7 @@ class EdiWorkflow(xworkflows.Workflow):
 
     states = (
         ("init", "Initial State"),
-        ("classified", "Classify Message"),
+        ("analyzed", "Analyze Message"),
         ("transformed", "Transform Message"),
         ("validated", "Validate Message"),
         ("transmitted", "Transmit Message"),
@@ -31,12 +33,11 @@ class EdiWorkflow(xworkflows.Workflow):
     )
 
     transitions = (
-        ("classify", "init", "classified"),
-        ("transform", "classified", "transformed"),
+        ("analyze", "init", "analyzed"),
+        ("transform", "analyzed", "transformed"),
         ("validate", "transformed", "validated"),
-        ("transmit", "validated", "transmitted"),
-        ("complete", "transmitted", "completed"),
-        ("cancel", ("classified", "transformed", "validated"), "cancelled"),
+        ("complete", "validated", "completed"),
+        ("cancel", ("analyzed", "transformed", "validated"), "cancelled"),
     )
 
     initial_state = "init"
@@ -44,20 +45,17 @@ class EdiWorkflow(xworkflows.Workflow):
 
 class EdiProcessor(xworkflows.WorkflowEnabled):
     """
-    Provides a base implementation for processing EDI messages.
-    This class is extended to support specific EDI implementations and formats such as HL7v2, FHIR R4, X12 5010, etc.
-    The EdiProcessor and its subclasses use the transition methods defined in the EdiWorkflow to support workflow
-    processing.
+    Processes EDI Messages.
     """
 
     state = EdiWorkflow()
 
-    def __init__(self, message):
-        self.message = message
-        self.result = {}
+    def __init__(self, input_message: Any):
+        self.input_message = input_message
+        self.meta_data: Optional[EdiMessageMetadata] = None
 
-    @transition("classify")
-    def classify(self):
+    @transition("analyze")
+    def analyze(self):
         pass
 
     @transition("transform")
@@ -66,10 +64,6 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
 
     @transition("validate")
     def validate(self):
-        pass
-
-    @transition("transmit")
-    def transmit(self):
         pass
 
     @transition("complete")

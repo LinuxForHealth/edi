@@ -5,8 +5,8 @@ def test_workflow_states(hl7_message):
     edi = EdiProcessor(hl7_message)
     assert edi.state == "init"
 
-    edi.classify()
-    assert edi.state == "classified"
+    edi.analyze()
+    assert edi.state == "analyzed"
 
     edi.transform()
     assert edi.state == "transformed"
@@ -14,15 +14,12 @@ def test_workflow_states(hl7_message):
     edi.validate()
     assert edi.state == "validated"
 
-    edi.transmit()
-    assert edi.state == "transmitted"
-
     edi.complete()
     assert edi.state == "completed"
 
 
 def test_workflow_cancel(hl7_message):
     edi = EdiProcessor(hl7_message)
-    edi.classify()
+    edi.analyze()
     edi.cancel()
     assert edi.state == "cancelled"
