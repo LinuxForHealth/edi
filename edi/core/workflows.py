@@ -1,3 +1,8 @@
+"""
+workflows.py
+
+Defines EDI processing workflows.
+"""
 import xworkflows
 from xworkflows import transition
 from typing import Any, Optional
@@ -16,7 +21,6 @@ class EdiWorkflow(xworkflows.Workflow):
         <li>analyze - generates EDI Message metadata.</li>
         <li>transform- used to enrich the input message in its current format, or transform the message to a different format.</li>
         <li>validate - validates the message.</li>
-        <li>transmit - transmits the EDI message to an external system.</li>
         <li>complete - marks the EDI workflow as complete, returning an EDI result.</li>
         <li>cancel - terminates the EDI workflow. May be used at any state prior to transmit.</li>
     </ul>
@@ -27,7 +31,6 @@ class EdiWorkflow(xworkflows.Workflow):
         ("analyzed", "Analyze Message"),
         ("transformed", "Transform Message"),
         ("validated", "Validate Message"),
-        ("transmitted", "Transmit Message"),
         ("completed", "Processing Complete"),
         ("cancelled", "Processing Cancelled"),
     )

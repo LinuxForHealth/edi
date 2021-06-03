@@ -1,19 +1,21 @@
 """
 models.py
+
+EDI Pydantic Domain Models.
 """
 from pydantic import BaseModel
 from enum import Enum
 from typing import List
 
 
-class EdiOperations(str, Enum):
+class BaseMessageType(str, Enum):
     """
-    Supported EDI Operations
+    The base message type used for an EDI message
     """
 
-    ANALYZE = "ANALYZE"
-    VALIDATE = "VALIDATE"
-    TRANSFORM = "TRANSFORM"
+    JSON = "JSON"
+    TEXT = "TEXT"
+    XML = "XML"
 
 
 class EdiMessageType(str, Enum):
@@ -26,11 +28,22 @@ class EdiMessageType(str, Enum):
     X12 = "X12"
 
 
+class EdiOperations(str, Enum):
+    """
+    Supported EDI Operations
+    """
+
+    ANALYZE = "ANALYZE"
+    VALIDATE = "VALIDATE"
+    TRANSFORM = "TRANSFORM"
+
+
 class EdiMessageMetadata(BaseModel):
     """
     EDI message metadata including the message type, version, record count, etc.
     """
 
+    baseMessageType: BaseMessageType
     messageType: EdiMessageType
     specificationVersion: str
     implementationVersions: List[str] = None
@@ -41,6 +54,7 @@ class EdiMessageMetadata(BaseModel):
     class Config:
         schema_extra = {
             "example": {
+                "baseMessageType": "TEXT",
                 "messageType": "X12",
                 "specificationVersion": "005010X279A1",
                 "implementationVersions": ["Supplemental Payer Guide"],
@@ -90,6 +104,7 @@ class EdiResult(BaseModel):
         schema_extra = {
             "example": {
                 "metadata": {
+                    "baseMessageType": "TEXT",
                     "messageType": "HL7",
                     "specificationVersion": "2.6",
                     "messageSize": 509,

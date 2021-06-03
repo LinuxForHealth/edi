@@ -1,5 +1,6 @@
 """
 config.py
+
 Defines application settings and configurations using Pydantic BaseSettings.
 Settings may be overriden using environment variables.
 Example:

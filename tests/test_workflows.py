@@ -1,3 +1,8 @@
+"""
+test_workflows.py
+
+Tests the EdiProcessor workflow implementation
+"""
 from edi.core.workflows import EdiProcessor
 
 

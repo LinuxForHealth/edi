@@ -1,3 +1,8 @@
+"""
+server_handlers.py
+
+Fast API server handler functions.
+"""
 import logging
 import logging.config
 import sys
