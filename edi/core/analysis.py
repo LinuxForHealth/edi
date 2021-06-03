@@ -85,13 +85,12 @@ class EdiAnalyzer:
         - recordCount
         :returns: dictionary
         """
-        data = {
-            "recordCount": 1,
-            "specificationVersion": "http://hl7.org/fhir"
-        }
+        data = {"recordCount": 1, "specificationVersion": "http://hl7.org/fhir"}
 
         fhir_json = load_json(self.input_message)
-        data["implementationVersions"] = profiles = fhir_json.get("meta", {}).get("profile", [])
+        data["implementationVersions"] = profiles = fhir_json.get("meta", {}).get(
+            "profile", []
+        )
 
         if fhir_json.get("resourceType", "").lower() == "bundle":
             record_count = len(fhir_json.get("entry", []))
@@ -120,10 +119,7 @@ class EdiAnalyzer:
 
             return namespace
 
-        data = {
-            "recordCount": 1,
-            "specificationVersion": "http://hl7.org/fhir"
-        }
+        data = {"recordCount": 1, "specificationVersion": "http://hl7.org/fhir"}
 
         fhir_xml = load_xml(self.input_message)
         fhir_namespace = _get_namespace(fhir_xml)
@@ -132,7 +128,9 @@ class EdiAnalyzer:
             fhir_namespace + "meta/" + fhir_namespace + "profile/[@value]"
         )
         if profile_elements:
-            data["implementationVersions"] = [e.attrib["value"] for e in profile_elements]
+            data["implementationVersions"] = [
+                e.attrib["value"] for e in profile_elements
+            ]
 
         if "bundle" in fhir_xml.tag.lower():
             data["record_count"] = len(fhir_xml.findall(fhir_namespace + "entry"))
