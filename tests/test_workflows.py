@@ -75,6 +75,7 @@ def test_workflow_enrich(hl7_message):
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
+    assert edi.metrics.operations == ["ANALYZE", "ENRICH"]
 
 
 def test_workflow_validate(hl7_message):
@@ -82,11 +83,13 @@ def test_workflow_validate(hl7_message):
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.validate()
+    assert edi.metrics.operations == ["ANALYZE", "VALIDATE"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
     edi.validate()
+    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "VALIDATE"]
 
 
 def test_workflow_translate(hl7_message):
@@ -94,17 +97,20 @@ def test_workflow_translate(hl7_message):
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.translate()
+    assert edi.metrics.operations == ["ANALYZE", "TRANSLATE"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
     edi.translate()
+    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "TRANSLATE"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
     edi.validate()
     edi.translate()
+    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "VALIDATE", "TRANSLATE"]
 
 
 def test_workflow_complete(hl7_message):
@@ -112,17 +118,20 @@ def test_workflow_complete(hl7_message):
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.complete()
+    assert edi.metrics.operations == ["ANALYZE", "COMPLETE"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
     edi.complete()
+    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "COMPLETE"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
     edi.validate()
     edi.complete()
+    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "VALIDATE", "COMPLETE"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
@@ -130,27 +139,38 @@ def test_workflow_complete(hl7_message):
     edi.validate()
     edi.translate()
     edi.complete()
+    assert edi.metrics.operations == [
+        "ANALYZE",
+        "ENRICH",
+        "VALIDATE",
+        "TRANSLATE",
+        "COMPLETE",
+    ]
 
 
 def test_workflow_cancel(hl7_message):
     """Validates cancel transition invocation"""
     edi = EdiProcessor(hl7_message)
     edi.cancel()
+    assert edi.metrics.operations == ["CANCEL"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.cancel()
+    assert edi.metrics.operations == ["ANALYZE", "CANCEL"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
     edi.cancel()
+    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "CANCEL"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
     edi.validate()
     edi.cancel()
+    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "VALIDATE", "CANCEL"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
@@ -158,26 +178,33 @@ def test_workflow_cancel(hl7_message):
     edi.validate()
     edi.translate()
     edi.cancel()
+    assert edi.metrics.operations == [
+        "ANALYZE",
+        "ENRICH",
+        "VALIDATE",
+        "TRANSLATE",
+        "CANCEL",
+    ]
 
 
 def test_workflow_fail(hl7_message):
     """Validates fail transition invocation"""
     edi = EdiProcessor(hl7_message)
     edi.fail()
-
-    edi = EdiProcessor(hl7_message)
-    edi.fail()
+    assert edi.metrics.operations == ["FAIL"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
     edi.fail()
+    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "FAIL"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
     edi.validate()
     edi.fail()
+    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "VALIDATE", "FAIL"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
@@ -185,6 +212,13 @@ def test_workflow_fail(hl7_message):
     edi.validate()
     edi.translate()
     edi.fail()
+    assert edi.metrics.operations == [
+        "ANALYZE",
+        "ENRICH",
+        "VALIDATE",
+        "TRANSLATE",
+        "FAIL",
+    ]
 
 
 def test_workflow_analyze_hl7(hl7_message):
@@ -205,6 +239,9 @@ def test_workflow_analyze_hl7(hl7_message):
     }
     assert edi.meta_data.dict() == expected_meta_data
 
+    assert edi.metrics.operations == ["ANALYZE"]
+    assert edi.metrics.analyzeTime > 0.0
+
 
 def test_workflow_analyze_x12(x12_message):
     edi = EdiProcessor(x12_message)
@@ -223,6 +260,9 @@ def test_workflow_analyze_x12(x12_message):
         "specificationVersion": "005010X279A1",
     }
     assert edi.meta_data.dict() == expected_meta_data
+
+    assert edi.metrics.operations == ["ANALYZE"]
+    assert edi.metrics.analyzeTime > 0.0
 
 
 def test_workflow_analyze_fhir_json(fhir_json_message):
@@ -246,6 +286,9 @@ def test_workflow_analyze_fhir_json(fhir_json_message):
     }
     assert edi.meta_data.dict() == expected_meta_data
 
+    assert edi.metrics.operations == ["ANALYZE"]
+    assert edi.metrics.analyzeTime > 0.0
+
 
 def test_workflow_analyze_fhir_xml(fhir_xml_message):
     edi = EdiProcessor(fhir_xml_message)
@@ -267,3 +310,6 @@ def test_workflow_analyze_fhir_xml(fhir_xml_message):
         "specificationVersion": "http://hl7.org/fhir",
     }
     assert edi.meta_data.dict() == expected_meta_data
+
+    assert edi.metrics.operations == ["ANALYZE"]
+    assert edi.metrics.analyzeTime > 0.0
