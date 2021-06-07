@@ -8,7 +8,8 @@ from xworkflows import transition
 from typing import Any, Optional
 
 from edi.core.analysis import EdiAnalyzer
-from edi.core.models import EdiMessageMetadata
+from edi.core.models import EdiMessageMetadata, EdiProcessingMetrics
+from edi.core.support import workflow_timer
 
 
 class EdiWorkflow(xworkflows.Workflow):
@@ -68,21 +69,28 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
     def __init__(self, input_message: Any):
         self.input_message = input_message
         self.meta_data: Optional[EdiMessageMetadata] = None
+        self.metrics: EdiProcessingMetrics = EdiProcessingMetrics(
+            analyzeTime=0.0, enrichTime=0.0, validateTime=0.0, translateTime=0.0
+        )
 
     @transition("analyze")
+    @workflow_timer
     def analyze(self):
         analyzer = EdiAnalyzer(self.input_message)
         self.meta_data = analyzer.analyze()
 
     @transition("enrich")
+    @workflow_timer
     def enrich(self):
         pass
 
     @transition("validate")
+    @workflow_timer
     def validate(self):
         pass
 
     @transition("translate")
+    @workflow_timer
     def translate(self):
         pass
 

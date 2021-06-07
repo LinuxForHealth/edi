@@ -34,8 +34,12 @@ class EdiOperations(str, Enum):
     """
 
     ANALYZE = "ANALYZE"
+    ENRICH = "ENRICH"
     VALIDATE = "VALIDATE"
-    TRANSFORM = "TRANSFORM"
+    TRANSLATE = "TRANSLATE"
+    COMPLETE = "COMPLETE"
+    CANCEL = "CANCEL"
+    FAIL = "FAIL"
 
 
 class EdiMessageMetadata(BaseModel):
@@ -70,23 +74,32 @@ class EdiProcessingMetrics(BaseModel):
     Captures processing metrics for EDI operations
     """
 
-    operations: List[EdiOperations]
+    operations: List[EdiOperations] = []
     analyzeTime: float = 0.0
-    validationTime: float = 0.0
-    transformTime: float = 0.0
+    enrichTime: float = 0.0
+    validateTime: float = 0.0
+    translateTime: float = 0.0
+    totalTime: float = 0.0
 
     @property
     def total_time(self) -> float:
         """Returns the total processing time"""
-        return self.analyzeTime + self.validationTime + self.transformTime
+        return (
+            self.analyzeTime
+            + self.enrichTime
+            + self.validateTime
+            + self.translateTime
+        )
 
     class Config:
         schema_extra = {
             "example": {
-                "operations": ["ANALYZE", "VALIDATE", "TRANSFORM"],
+                "operations": ["ANALYZE", "ENRICH", "VALIDATE", "TRANSLATE", "COMPLETE"],
                 "analyzeTime": 0.142347273,
+                "enrichTime": 0.013415911,
                 "validationTime": 0.013415911,
-                "transformTime": 2.625179046,
+                "translateTime": 2.625179046,
+                "totalTime": 2.794358141,
             }
         }
 
@@ -112,10 +125,10 @@ class EdiResult(BaseModel):
                     "checksum": "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",
                 },
                 "metrics": {
-                    "operations": ["ANALYZE", "VALIDATE", "TRANSFORM"],
+                    "operations": ["ANALYZE", "VALIDATE", "TRANSLATE", "COMPLETE"],
                     "analyzeTime": 0.142347273,
                     "validationTime": 0.013415911,
-                    "transformTime": 2.625179046,
+                    "translateTime": 2.625179046,
                 },
                 "errors": [],
             }
