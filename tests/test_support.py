@@ -4,7 +4,7 @@ test_support.py
 Tests EDI support functions.
 """
 from edi.core.models import EdiProcessingMetrics
-from edi.core.support import create_checksum, load_xml, load_json, workflow_timer
+from edi.core.support import create_checksum, load_xml, load_json
 import pytest
 from lxml.etree import ParseError
 from json import JSONDecodeError
@@ -68,13 +68,3 @@ def test_load_json(fhir_json_message):
 def test_load_json_failure(fhir_xml_message):
     with pytest.raises(JSONDecodeError):
         load_json(fhir_xml_message)
-
-
-def test_workflow_timer(workflow_fixture):
-    """Tests the workflow_timer decorator"""
-    # manually wire up the "decorator"
-    workflow_fixture.analyze = workflow_timer(workflow_fixture.analyze)
-    # create new instance
-    wf = workflow_fixture()
-    wf.analyze()
-    assert wf.metrics.analyzeTime > 0.0

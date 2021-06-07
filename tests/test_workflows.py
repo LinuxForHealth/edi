@@ -18,26 +18,39 @@ def test_workflow_state_progression(hl7_message):
     edi.analyze()
     assert edi.state == "analyzed"
     assert edi.meta_data is not None
+    assert edi.metrics.operations == ["ANALYZE"]
 
     edi.enrich()
     assert edi.state == "enriched"
+    assert edi.metrics.operations == ["ANALYZE", "ENRICH"]
 
     edi.validate()
     assert edi.state == "validated"
+    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "VALIDATE"]
 
     edi.translate()
     assert edi.state == "translated"
+    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "VALIDATE", "TRANSLATE"]
 
     edi.complete()
     assert edi.state == "completed"
+    assert edi.metrics.operations == [
+        "ANALYZE",
+        "ENRICH",
+        "VALIDATE",
+        "TRANSLATE",
+        "COMPLETE",
+    ]
 
     edi = EdiProcessor(hl7_message)
     edi.cancel()
     assert edi.state == "cancelled"
+    assert edi.metrics.operations == ["CANCEL"]
 
     edi = EdiProcessor(hl7_message)
     edi.fail()
     assert edi.state == "failed"
+    assert edi.metrics.operations == ["FAIL"]
 
 
 def test_workflow_transition_errors(hl7_message):

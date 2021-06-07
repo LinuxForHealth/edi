@@ -4,8 +4,6 @@ import logging
 from lxml import etree
 from lxml.etree import ParseError
 import hashlib
-import time
-import functools
 
 logger = logging.getLogger(__name__)
 
@@ -48,21 +46,3 @@ def load_xml(message: str):
         logger.exception("Error loading XML message")
         raise
     return xml_message
-
-
-def workflow_timer(fn):
-    """
-    Used to annotate a workflow method (decorator) to generate metrics.
-    """
-
-    @functools.wraps(fn)
-    def wrapped_fn(self, *args, **kwargs):
-        start = time.perf_counter()
-        fn(self, *args, **kwargs)
-        stop = time.perf_counter()
-        elapsed_time = stop - start
-
-        metric_name = f"{fn.__name__}Time"
-        setattr(self.metrics, metric_name, elapsed_time)
-
-    return wrapped_fn
