@@ -15,8 +15,8 @@ def workflow_fixture():
     class WorkflowFixture:
         def __init__(self):
             self.metrics: EdiProcessingMetrics = EdiProcessingMetrics(
-            analyzeTime=0.0, enrichTime=0.0, validateTime=0.0, translateTime=0.0
-        )
+                analyzeTime=0.0, enrichTime=0.0, validateTime=0.0, translateTime=0.0
+            )
 
         def analyze(self):
             pass

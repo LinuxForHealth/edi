@@ -54,6 +54,7 @@ def workflow_timer(fn):
     """
     Used to annotate a workflow method (decorator) to generate metrics.
     """
+
     @functools.wraps(fn)
     def wrapped_fn(self, *args, **kwargs):
         start = time.perf_counter()

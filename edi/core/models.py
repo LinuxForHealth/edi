@@ -85,16 +85,19 @@ class EdiProcessingMetrics(BaseModel):
     def total_time(self) -> float:
         """Returns the total processing time"""
         return (
-            self.analyzeTime
-            + self.enrichTime
-            + self.validateTime
-            + self.translateTime
+            self.analyzeTime + self.enrichTime + self.validateTime + self.translateTime
         )
 
     class Config:
         schema_extra = {
             "example": {
-                "operations": ["ANALYZE", "ENRICH", "VALIDATE", "TRANSLATE", "COMPLETE"],
+                "operations": [
+                    "ANALYZE",
+                    "ENRICH",
+                    "VALIDATE",
+                    "TRANSLATE",
+                    "COMPLETE",
+                ],
                 "analyzeTime": 0.142347273,
                 "enrichTime": 0.013415911,
                 "validationTime": 0.013415911,
