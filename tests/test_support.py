@@ -3,10 +3,25 @@ test_support.py
 
 Tests EDI support functions.
 """
+from edi.core.models import EdiProcessingMetrics
 from edi.core.support import create_checksum, load_xml, load_json
 import pytest
 from lxml.etree import ParseError
 from json import JSONDecodeError
+
+
+@pytest.fixture
+def workflow_fixture():
+    class WorkflowFixture:
+        def __init__(self):
+            self.metrics: EdiProcessingMetrics = EdiProcessingMetrics(
+                analyzeTime=0.0, enrichTime=0.0, validateTime=0.0, translateTime=0.0
+            )
+
+        def analyze(self):
+            pass
+
+    return WorkflowFixture
 
 
 @pytest.mark.parametrize(

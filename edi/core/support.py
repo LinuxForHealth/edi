@@ -5,7 +5,6 @@ from lxml import etree
 from lxml.etree import ParseError
 import hashlib
 
-
 logger = logging.getLogger(__name__)
 
 

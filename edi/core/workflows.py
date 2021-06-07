@@ -3,12 +3,14 @@ workflows.py
 
 Defines EDI processing workflows.
 """
+import time
+
 import xworkflows
 from xworkflows import transition
 from typing import Any, Optional
 
 from edi.core.analysis import EdiAnalyzer
-from edi.core.models import EdiMessageMetadata
+from edi.core.models import EdiMessageMetadata, EdiProcessingMetrics, EdiOperations
 
 
 class EdiWorkflow(xworkflows.Workflow):
@@ -68,32 +70,57 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
     def __init__(self, input_message: Any):
         self.input_message = input_message
         self.meta_data: Optional[EdiMessageMetadata] = None
+        self.metrics: EdiProcessingMetrics = EdiProcessingMetrics(
+            analyzeTime=0.0, enrichTime=0.0, validateTime=0.0, translateTime=0.0
+        )
 
     @transition("analyze")
     def analyze(self):
+        start = time.perf_counter()
+
         analyzer = EdiAnalyzer(self.input_message)
         self.meta_data = analyzer.analyze()
 
+        end = time.perf_counter()
+        elapsed_time = end - start
+        self.metrics.analyzeTime = elapsed_time
+        self.metrics.operations.append(EdiOperations.ANALYZE)
+
     @transition("enrich")
     def enrich(self):
-        pass
+        start = time.perf_counter()
+
+        end = time.perf_counter()
+        elapsed_time = end - start
+        self.metrics.enrichTime = elapsed_time
+        self.metrics.operations.append(EdiOperations.ENRICH)
 
     @transition("validate")
     def validate(self):
-        pass
+        start = time.perf_counter()
+
+        end = time.perf_counter()
+        elapsed_time = end - start
+        self.metrics.validateTime = elapsed_time
+        self.metrics.operations.append(EdiOperations.VALIDATE)
 
     @transition("translate")
     def translate(self):
-        pass
+        start = time.perf_counter()
+
+        end = time.perf_counter()
+        elapsed_time = end - start
+        self.metrics.translateTime = elapsed_time
+        self.metrics.operations.append(EdiOperations.TRANSLATE)
 
     @transition("complete")
     def complete(self):
-        pass
+        self.metrics.operations.append(EdiOperations.COMPLETE)
 
     @transition("cancel")
     def cancel(self):
-        pass
+        self.metrics.operations.append(EdiOperations.CANCEL)
 
     @transition("fail")
     def fail(self):
-        pass
+        self.metrics.operations.append(EdiOperations.FAIL)
