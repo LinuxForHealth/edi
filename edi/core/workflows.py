@@ -6,6 +6,8 @@ Defines EDI processing workflows.
 import xworkflows
 from xworkflows import transition
 from typing import Any, Optional
+
+from edi.core.analysis import EdiAnalyzer
 from edi.core.models import EdiMessageMetadata
 
 
@@ -18,20 +20,40 @@ class EdiWorkflow(xworkflows.Workflow):
 
     Transitions in the EDI workflow include:
     <ul>
-        <li>analyze - generates EDI Message metadata.</li>
-        <li>transform- used to enrich the input message in its current format, or transform the message to a different format.</li>
-        <li>validate - validates the message.</li>
-        <li>complete - marks the EDI workflow as complete, returning an EDI result.</li>
-        <li>cancel - terminates the EDI workflow. May be used at any state prior to transmit.</li>
+        <li>analyze - Generates an EdiMessageMetadata object for the EDI Message.</li>
+        <li>enrich - Enriches the input message with additional data using custom transformations.</li>
+        <li>validate - Validates the input message.</li>
+        <li>translate- Translates the input message in a supported format to a different supported format. Example: translate HL7v2 to FHIR.</li>
+        <li>complete - Marks the EDI workflow as complete, returning an EDI result.</li>
+        <li>cancel - Cancels the current workflow process, returning an EDI result.</li>
+        <li>fail - Reached if the workflow encounters an unrecoverable error. Returns an EDI result.</li>
     </ul>
     """
 
     states = (
         ("init", "Initial State"),
         ("analyzed", "Analyze Message"),
+        ("enriched", "Enrich Message"),
+        ("validated", "Validate Message"),
+        ("translated", "Translate Message"),
+        ("completed", "Complete Processing"),
+        ("cancelled", "Cancel Processing"),
+        ("failed", "Fail Processing"),
     )
 
-    transitions = (("analyze", "init", "analyzed"),)
+    transitions = (
+        ("analyze", "init", "analyzed"),
+        ("enrich", "analyzed", "enriched"),
+        ("validate", ("analyzed", "enriched"), "validated"),
+        ("translate", ("analyzed", "enriched", "validated"), "translated"),
+        ("complete", ("analyzed", "enriched", "validated", "translated"), "completed"),
+        (
+            "cancel",
+            ("init", "analyzed", "enriched", "validated", "translated"),
+            "cancelled",
+        ),
+        ("fail", ("init", "analyzed", "enriched", "validated", "translated"), "failed"),
+    )
 
     initial_state = "init"
 
@@ -49,4 +71,29 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
 
     @transition("analyze")
     def analyze(self):
+        analyzer = EdiAnalyzer(self.input_message)
+        self.meta_data = analyzer.analyze()
+
+    @transition("enrich")
+    def enrich(self):
+        pass
+
+    @transition("validate")
+    def validate(self):
+        pass
+
+    @transition("translate")
+    def translate(self):
+        pass
+
+    @transition("complete")
+    def complete(self):
+        pass
+
+    @transition("cancel")
+    def cancel(self):
+        pass
+
+    @transition("fail")
+    def fail(self):
         pass
