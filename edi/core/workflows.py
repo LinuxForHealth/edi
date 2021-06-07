@@ -29,19 +29,9 @@ class EdiWorkflow(xworkflows.Workflow):
     states = (
         ("init", "Initial State"),
         ("analyzed", "Analyze Message"),
-        ("transformed", "Transform Message"),
-        ("validated", "Validate Message"),
-        ("completed", "Processing Complete"),
-        ("cancelled", "Processing Cancelled"),
     )
 
-    transitions = (
-        ("analyze", "init", "analyzed"),
-        ("transform", "analyzed", "transformed"),
-        ("validate", "transformed", "validated"),
-        ("complete", "validated", "completed"),
-        ("cancel", ("analyzed", "transformed", "validated"), "cancelled"),
-    )
+    transitions = (("analyze", "init", "analyzed"),)
 
     initial_state = "init"
 
@@ -59,20 +49,4 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
 
     @transition("analyze")
     def analyze(self):
-        pass
-
-    @transition("transform")
-    def transform(self):
-        pass
-
-    @transition("validate")
-    def validate(self):
-        pass
-
-    @transition("complete")
-    def complete(self):
-        pass
-
-    @transition("cancel")
-    def cancel(self):
         pass
