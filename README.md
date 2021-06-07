@@ -12,4 +12,29 @@
 
 ## Overview
 
-LinuxForHealth EDI detects, validates, and transforms standard healthcare data formats.
+LinuxForHealth EDI provides a common processing model for standard health care messaging formats. Supported formats include: 
+* ASC X12 5010
+* HL7v2
+* FHIR R4
+
+The common processing model is implemented using [xWorkflows](https://xworkflows.readthedocs.io/en/latest/). The xWorkflows API supports workflow declaration, introspection, and event handling during state transitions. A workflow definition includes states and transitions, which are used to direct the workflow to a new state. LinuxForHealth defines a single workflow, EDIWorkflow, for message processing.
+
+The LinuxForHealth EDI workflow processor, EdiProcessor, includes the following transitions:
+
+| Transition Name | Description                                                                                                           | Required |
+| --------------- | --------------------------------------------------------------------------------------------------------------------- | -------- |
+| Analyze         | Generates an EdiMessageMetadata object for the EDI Message.                                                           | Yes      |
+| Enrich          | Enriches the input message with additional data using custom transformations.                                         | No       |
+| Validate        | Validates the input message.                                                                                          | No       |
+| Translate       | Translates the input message in a supported format to a different supported format. Example: translate HL7v2 to FHIR. | No       |
+| Cancel          | Cancels the current workflow process.                                                                                 | No       |
+| Fail            | Reached when the workflow encounters an unrecoverable error and fails.                                                | No       |
+
+LinuxForHealth EDI supports several integration modes:
+* REST API
+* CLI
+* Direct invocation as an external library
+
+## Quickstart
+
+TBD
