@@ -74,7 +74,6 @@ class EdiProcessingMetrics(BaseModel):
     Captures processing metrics for EDI operations
     """
 
-    operations: List[EdiOperations] = []
     analyzeTime: float = 0.0
     enrichTime: float = 0.0
     validateTime: float = 0.0
@@ -91,13 +90,6 @@ class EdiProcessingMetrics(BaseModel):
     class Config:
         schema_extra = {
             "example": {
-                "operations": [
-                    "ANALYZE",
-                    "ENRICH",
-                    "VALIDATE",
-                    "TRANSLATE",
-                    "COMPLETE",
-                ],
                 "analyzeTime": 0.142347273,
                 "enrichTime": 0.013415911,
                 "validationTime": 0.013415911,
@@ -114,6 +106,8 @@ class EdiResult(BaseModel):
 
     metadata: EdiMessageMetadata
     metrics: EdiProcessingMetrics
+    inputMessage: str
+    operations: List[EdiOperations]
     errors: List[dict] = []
 
     class Config:
@@ -128,12 +122,14 @@ class EdiResult(BaseModel):
                     "checksum": "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",
                 },
                 "metrics": {
-                    "operations": ["ANALYZE", "VALIDATE", "TRANSLATE", "COMPLETE"],
                     "analyzeTime": 0.142347273,
+                    "enrichTime": 0.0,
                     "validationTime": 0.013415911,
                     "translateTime": 2.625179046,
                 },
-                "errors": [],
+                "inputMessage": "EDI Message",
+                "operations": ["ANALYZE", "ENRICH", "VALIDATE", "TRANSLATE", "COMPLETE"],
+                "errors": []
             }
         }
 

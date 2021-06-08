@@ -68,11 +68,21 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
     state = EdiWorkflow()
 
     def __init__(self, input_message: Any):
+        """
+        Configures the EdiProcess instance.
+        Attributes include:
+        - input_message: cached source message
+        - meta_data: EdiMessageMetadata object
+        - metrics: EdiProcessingMetrics object
+        - operations: List of EdiOperations completed for this instance
+        """
+
         self.input_message = input_message
         self.meta_data: Optional[EdiMessageMetadata] = None
         self.metrics: EdiProcessingMetrics = EdiProcessingMetrics(
             analyzeTime=0.0, enrichTime=0.0, validateTime=0.0, translateTime=0.0
         )
+        self.operations: Optional[EdiOperations] = []
 
     @transition("analyze")
     def analyze(self):
@@ -84,7 +94,7 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
         end = time.perf_counter()
         elapsed_time = end - start
         self.metrics.analyzeTime = elapsed_time
-        self.metrics.operations.append(EdiOperations.ANALYZE)
+        self.operations.append(EdiOperations.ANALYZE)
 
     @transition("enrich")
     def enrich(self):
@@ -93,7 +103,7 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
         end = time.perf_counter()
         elapsed_time = end - start
         self.metrics.enrichTime = elapsed_time
-        self.metrics.operations.append(EdiOperations.ENRICH)
+        self.operations.append(EdiOperations.ENRICH)
 
     @transition("validate")
     def validate(self):
@@ -102,7 +112,7 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
         end = time.perf_counter()
         elapsed_time = end - start
         self.metrics.validateTime = elapsed_time
-        self.metrics.operations.append(EdiOperations.VALIDATE)
+        self.operations.append(EdiOperations.VALIDATE)
 
     @transition("translate")
     def translate(self):
@@ -111,16 +121,16 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
         end = time.perf_counter()
         elapsed_time = end - start
         self.metrics.translateTime = elapsed_time
-        self.metrics.operations.append(EdiOperations.TRANSLATE)
+        self.operations.append(EdiOperations.TRANSLATE)
 
     @transition("complete")
     def complete(self):
-        self.metrics.operations.append(EdiOperations.COMPLETE)
+        self.operations.append(EdiOperations.COMPLETE)
 
     @transition("cancel")
     def cancel(self):
-        self.metrics.operations.append(EdiOperations.CANCEL)
+        self.operations.append(EdiOperations.CANCEL)
 
     @transition("fail")
     def fail(self):
-        self.metrics.operations.append(EdiOperations.FAIL)
+        self.operations.append(EdiOperations.FAIL)
