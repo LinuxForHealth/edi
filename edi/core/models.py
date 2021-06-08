@@ -128,8 +128,14 @@ class EdiResult(BaseModel):
                     "translateTime": 2.625179046,
                 },
                 "inputMessage": "EDI Message",
-                "operations": ["ANALYZE", "ENRICH", "VALIDATE", "TRANSLATE", "COMPLETE"],
-                "errors": []
+                "operations": [
+                    "ANALYZE",
+                    "ENRICH",
+                    "VALIDATE",
+                    "TRANSLATE",
+                    "COMPLETE",
+                ],
+                "errors": [],
             }
         }
 

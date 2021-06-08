@@ -17,8 +17,8 @@ def test_workflow_state_progression(hl7_message):
     assert edi.input_message == hl7_message
     assert edi.meta_data is None
     assert edi.metrics == EdiProcessingMetrics(
-            analyzeTime=0.0, enrichTime=0.0, validateTime=0.0, translateTime=0.0
-        )
+        analyzeTime=0.0, enrichTime=0.0, validateTime=0.0, translateTime=0.0
+    )
     assert edi.operations == []
 
     edi.analyze()
