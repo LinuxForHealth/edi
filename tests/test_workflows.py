@@ -5,7 +5,7 @@ Tests the EdiProcessor workflow implementation
 """
 from xworkflows.base import InvalidTransitionError
 
-from edi.core.models import BaseMessageType, EdiMessageType
+from edi.core.models import BaseMessageType, EdiMessageType, EdiProcessingMetrics
 from edi.core.workflows import EdiProcessor
 import pytest
 
@@ -14,27 +14,34 @@ def test_workflow_state_progression(hl7_message):
     """Tests linear workflow state transitions"""
     edi = EdiProcessor(hl7_message)
     assert edi.state == "init"
+    assert edi.input_message == hl7_message
+    assert edi.meta_data is None
+    assert edi.metrics == EdiProcessingMetrics(
+        analyzeTime=0.0, enrichTime=0.0, validateTime=0.0, translateTime=0.0
+    )
+    assert edi.operations == []
 
     edi.analyze()
     assert edi.state == "analyzed"
+    assert edi.input_message == hl7_message
+    assert edi.operations == ["ANALYZE"]
     assert edi.meta_data is not None
-    assert edi.metrics.operations == ["ANALYZE"]
 
     edi.enrich()
     assert edi.state == "enriched"
-    assert edi.metrics.operations == ["ANALYZE", "ENRICH"]
+    assert edi.operations == ["ANALYZE", "ENRICH"]
 
     edi.validate()
     assert edi.state == "validated"
-    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "VALIDATE"]
+    assert edi.operations == ["ANALYZE", "ENRICH", "VALIDATE"]
 
     edi.translate()
     assert edi.state == "translated"
-    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "VALIDATE", "TRANSLATE"]
+    assert edi.operations == ["ANALYZE", "ENRICH", "VALIDATE", "TRANSLATE"]
 
     edi.complete()
     assert edi.state == "completed"
-    assert edi.metrics.operations == [
+    assert edi.operations == [
         "ANALYZE",
         "ENRICH",
         "VALIDATE",
@@ -45,12 +52,12 @@ def test_workflow_state_progression(hl7_message):
     edi = EdiProcessor(hl7_message)
     edi.cancel()
     assert edi.state == "cancelled"
-    assert edi.metrics.operations == ["CANCEL"]
+    assert edi.operations == ["CANCEL"]
 
     edi = EdiProcessor(hl7_message)
     edi.fail()
     assert edi.state == "failed"
-    assert edi.metrics.operations == ["FAIL"]
+    assert edi.operations == ["FAIL"]
 
 
 def test_workflow_transition_errors(hl7_message):
@@ -75,7 +82,7 @@ def test_workflow_enrich(hl7_message):
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
-    assert edi.metrics.operations == ["ANALYZE", "ENRICH"]
+    assert edi.operations == ["ANALYZE", "ENRICH"]
 
 
 def test_workflow_validate(hl7_message):
@@ -83,13 +90,13 @@ def test_workflow_validate(hl7_message):
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.validate()
-    assert edi.metrics.operations == ["ANALYZE", "VALIDATE"]
+    assert edi.operations == ["ANALYZE", "VALIDATE"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
     edi.validate()
-    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "VALIDATE"]
+    assert edi.operations == ["ANALYZE", "ENRICH", "VALIDATE"]
 
 
 def test_workflow_translate(hl7_message):
@@ -97,20 +104,20 @@ def test_workflow_translate(hl7_message):
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.translate()
-    assert edi.metrics.operations == ["ANALYZE", "TRANSLATE"]
+    assert edi.operations == ["ANALYZE", "TRANSLATE"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
     edi.translate()
-    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "TRANSLATE"]
+    assert edi.operations == ["ANALYZE", "ENRICH", "TRANSLATE"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
     edi.validate()
     edi.translate()
-    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "VALIDATE", "TRANSLATE"]
+    assert edi.operations == ["ANALYZE", "ENRICH", "VALIDATE", "TRANSLATE"]
 
 
 def test_workflow_complete(hl7_message):
@@ -118,20 +125,20 @@ def test_workflow_complete(hl7_message):
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.complete()
-    assert edi.metrics.operations == ["ANALYZE", "COMPLETE"]
+    assert edi.operations == ["ANALYZE", "COMPLETE"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
     edi.complete()
-    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "COMPLETE"]
+    assert edi.operations == ["ANALYZE", "ENRICH", "COMPLETE"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
     edi.validate()
     edi.complete()
-    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "VALIDATE", "COMPLETE"]
+    assert edi.operations == ["ANALYZE", "ENRICH", "VALIDATE", "COMPLETE"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
@@ -139,7 +146,7 @@ def test_workflow_complete(hl7_message):
     edi.validate()
     edi.translate()
     edi.complete()
-    assert edi.metrics.operations == [
+    assert edi.operations == [
         "ANALYZE",
         "ENRICH",
         "VALIDATE",
@@ -152,25 +159,25 @@ def test_workflow_cancel(hl7_message):
     """Validates cancel transition invocation"""
     edi = EdiProcessor(hl7_message)
     edi.cancel()
-    assert edi.metrics.operations == ["CANCEL"]
+    assert edi.operations == ["CANCEL"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.cancel()
-    assert edi.metrics.operations == ["ANALYZE", "CANCEL"]
+    assert edi.operations == ["ANALYZE", "CANCEL"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
     edi.cancel()
-    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "CANCEL"]
+    assert edi.operations == ["ANALYZE", "ENRICH", "CANCEL"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
     edi.validate()
     edi.cancel()
-    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "VALIDATE", "CANCEL"]
+    assert edi.operations == ["ANALYZE", "ENRICH", "VALIDATE", "CANCEL"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
@@ -178,7 +185,7 @@ def test_workflow_cancel(hl7_message):
     edi.validate()
     edi.translate()
     edi.cancel()
-    assert edi.metrics.operations == [
+    assert edi.operations == [
         "ANALYZE",
         "ENRICH",
         "VALIDATE",
@@ -191,20 +198,20 @@ def test_workflow_fail(hl7_message):
     """Validates fail transition invocation"""
     edi = EdiProcessor(hl7_message)
     edi.fail()
-    assert edi.metrics.operations == ["FAIL"]
+    assert edi.operations == ["FAIL"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
     edi.fail()
-    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "FAIL"]
+    assert edi.operations == ["ANALYZE", "ENRICH", "FAIL"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
     edi.validate()
     edi.fail()
-    assert edi.metrics.operations == ["ANALYZE", "ENRICH", "VALIDATE", "FAIL"]
+    assert edi.operations == ["ANALYZE", "ENRICH", "VALIDATE", "FAIL"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
@@ -212,7 +219,7 @@ def test_workflow_fail(hl7_message):
     edi.validate()
     edi.translate()
     edi.fail()
-    assert edi.metrics.operations == [
+    assert edi.operations == [
         "ANALYZE",
         "ENRICH",
         "VALIDATE",
@@ -223,10 +230,7 @@ def test_workflow_fail(hl7_message):
 
 def test_workflow_analyze_hl7(hl7_message):
     edi = EdiProcessor(hl7_message)
-    assert edi.state == "init"
-
     edi.analyze()
-    assert edi.state == "analyzed"
 
     expected_meta_data = {
         "baseMessageType": BaseMessageType.TEXT,
@@ -239,16 +243,13 @@ def test_workflow_analyze_hl7(hl7_message):
     }
     assert edi.meta_data.dict() == expected_meta_data
 
-    assert edi.metrics.operations == ["ANALYZE"]
+    assert edi.operations == ["ANALYZE"]
     assert edi.metrics.analyzeTime > 0.0
 
 
 def test_workflow_analyze_x12(x12_message):
     edi = EdiProcessor(x12_message)
-    assert edi.state == "init"
-
     edi.analyze()
-    assert edi.state == "analyzed"
 
     expected_meta_data = {
         "baseMessageType": BaseMessageType.TEXT,
@@ -261,16 +262,13 @@ def test_workflow_analyze_x12(x12_message):
     }
     assert edi.meta_data.dict() == expected_meta_data
 
-    assert edi.metrics.operations == ["ANALYZE"]
+    assert edi.operations == ["ANALYZE"]
     assert edi.metrics.analyzeTime > 0.0
 
 
 def test_workflow_analyze_fhir_json(fhir_json_message):
     edi = EdiProcessor(fhir_json_message)
-    assert edi.state == "init"
-
     edi.analyze()
-    assert edi.state == "analyzed"
 
     expected_meta_data = {
         "baseMessageType": BaseMessageType.JSON,
@@ -286,16 +284,13 @@ def test_workflow_analyze_fhir_json(fhir_json_message):
     }
     assert edi.meta_data.dict() == expected_meta_data
 
-    assert edi.metrics.operations == ["ANALYZE"]
+    assert edi.operations == ["ANALYZE"]
     assert edi.metrics.analyzeTime > 0.0
 
 
 def test_workflow_analyze_fhir_xml(fhir_xml_message):
     edi = EdiProcessor(fhir_xml_message)
-    assert edi.state == "init"
-
     edi.analyze()
-    assert edi.state == "analyzed"
 
     expected_meta_data = {
         "baseMessageType": BaseMessageType.XML,
@@ -311,5 +306,5 @@ def test_workflow_analyze_fhir_xml(fhir_xml_message):
     }
     assert edi.meta_data.dict() == expected_meta_data
 
-    assert edi.metrics.operations == ["ANALYZE"]
+    assert edi.operations == ["ANALYZE"]
     assert edi.metrics.analyzeTime > 0.0
