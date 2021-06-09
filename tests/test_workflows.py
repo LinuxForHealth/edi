@@ -5,7 +5,12 @@ Tests the EdiProcessor workflow implementation
 """
 from xworkflows.base import InvalidTransitionError
 
-from edi.core.models import BaseMessageType, EdiMessageType, EdiProcessingMetrics
+from edi.core.models import (
+    BaseMessageType,
+    EdiMessageType,
+    EdiProcessingMetrics,
+    EdiOperations,
+)
 from edi.core.workflows import EdiProcessor
 import pytest
 
@@ -225,6 +230,26 @@ def test_workflow_fail(hl7_message):
         "VALIDATE",
         "TRANSLATE",
         "FAIL",
+    ]
+
+
+def test_workflow_run(hl7_message):
+    edi = EdiProcessor(hl7_message)
+    edi.run()
+    assert edi.operations == [
+        EdiOperations.ANALYZE,
+        EdiOperations.ENRICH,
+        EdiOperations.VALIDATE,
+        EdiOperations.TRANSLATE,
+        EdiOperations.COMPLETE,
+    ]
+
+    edi = EdiProcessor(hl7_message)
+    edi.run(EdiOperations.VALIDATE)
+    assert edi.operations == [
+        EdiOperations.ANALYZE,
+        EdiOperations.VALIDATE,
+        EdiOperations.COMPLETE,
     ]
 
 

@@ -11,6 +11,9 @@ from typing import Any, Optional
 
 from edi.core.analysis import EdiAnalyzer
 from edi.core.models import EdiMessageMetadata, EdiProcessingMetrics, EdiOperations
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class EdiWorkflow(xworkflows.Workflow):
@@ -134,3 +137,34 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
     @transition("fail")
     def fail(self):
         self.operations.append(EdiOperations.FAIL)
+
+    def run(self, *args: EdiOperations):
+        """
+        Convenience method used to run a workflow process.
+        Run accepts an optional list of EdiOperations to perform, ignoring operations which are required (analyze) and additional
+        operations used to terminate a workflow (cancel, complete, fail).
+        If a list is not provided, the method will execute each available operations as noted above.
+        If an exception occurs, the error is logged and the workflow is set to "fail"
+        The EdiOperations are expected to be listed in dependency order.
+        """
+        excluded_operations = (
+            EdiOperations.ANALYZE,
+            EdiOperations.CANCEL,
+            EdiOperations.COMPLETE,
+            EdiOperations.FAIL,
+        )
+
+        if not args:
+            args = list(EdiOperations)
+
+        args = [a.lower() for a in args if a not in excluded_operations]
+
+        try:
+            self.analyze()
+            for method_name in args:
+                method = getattr(self, method_name)
+                method()
+            self.complete()
+        except Exception as ex:
+            logger.exception(f"Error executing workflow method {method_name}")
+            self.fail()
