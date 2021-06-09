@@ -10,7 +10,12 @@ from xworkflows import transition
 from typing import Any, List, Optional
 
 from edi.core.analysis import EdiAnalyzer
-from edi.core.models import EdiMessageMetadata, EdiProcessingMetrics, EdiOperations, EdiResult
+from edi.core.models import (
+    EdiMessageMetadata,
+    EdiProcessingMetrics,
+    EdiOperations,
+    EdiResult,
+)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -70,7 +75,11 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
 
     state = EdiWorkflow()
 
-    supported_run_operations: List[EdiOperations] = [EdiOperations.ENRICH, EdiOperations.VALIDATE, EdiOperations.TRANSLATE]
+    supported_run_operations: List[EdiOperations] = [
+        EdiOperations.ENRICH,
+        EdiOperations.VALIDATE,
+        EdiOperations.TRANSLATE,
+    ]
 
     def __init__(self, input_message: Any):
         """
@@ -149,7 +158,7 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
             "metrics": self.metrics.dict(),
             "inputMessage": self.input_message,
             "operations": self.operations,
-            "errors": []
+            "errors": [],
         }
 
         return EdiResult(**result_data)
