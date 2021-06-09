@@ -101,4 +101,4 @@ if __name__ == "__main__":
     else:
         print(edi_result.json())
 
-#TODO: totalTime
+# TODO: totalTime

@@ -82,7 +82,9 @@ class EdiProcessingMetrics(BaseModel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.totalTime = self.analyzeTime + self.enrichTime + self.validateTime + self.translateTime
+        self.totalTime = (
+            self.analyzeTime + self.enrichTime + self.validateTime + self.translateTime
+        )
 
     class Config:
         schema_extra = {
