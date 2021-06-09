@@ -222,5 +222,6 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
 
             return self.complete()
         except Exception as ex:
-            logger.exception(f"Error executing workflow")
-            return self.fail()
+            msg = "An error occurred executing the EdiProcessor workflow"
+            logger.exception(msg)
+            return self.fail(msg, ex)
