@@ -80,10 +80,9 @@ class EdiProcessingMetrics(BaseModel):
     translateTime: float = 0.0
     totalTime: float = 0.0
 
-    @property
-    def total_time(self) -> float:
-        """Returns the total processing time"""
-        return (
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.totalTime = (
             self.analyzeTime + self.enrichTime + self.validateTime + self.translateTime
         )
 

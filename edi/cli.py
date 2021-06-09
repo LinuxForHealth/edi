@@ -100,3 +100,5 @@ if __name__ == "__main__":
         print(edi_result.json(indent=4, sort_keys=True))
     else:
         print(edi_result.json())
+
+# TODO: totalTime
