@@ -7,10 +7,10 @@ import time
 
 import xworkflows
 from xworkflows import transition
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from edi.core.analysis import EdiAnalyzer
-from edi.core.models import EdiMessageMetadata, EdiProcessingMetrics, EdiOperations
+from edi.core.models import EdiMessageMetadata, EdiProcessingMetrics, EdiOperations, EdiResult
 import logging
 
 logger = logging.getLogger(__name__)
@@ -70,6 +70,8 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
 
     state = EdiWorkflow()
 
+    supported_run_operations: List[EdiOperations] = [EdiOperations.ENRICH, EdiOperations.VALIDATE, EdiOperations.TRANSLATE]
+
     def __init__(self, input_message: Any):
         """
         Configures the EdiProcess instance.
@@ -89,6 +91,9 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
 
     @transition("analyze")
     def analyze(self):
+        """
+        Generates EdiMessageMetadata for the input message.
+        """
         start = time.perf_counter()
 
         analyzer = EdiAnalyzer(self.input_message)
@@ -101,8 +106,11 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
 
     @transition("enrich")
     def enrich(self):
+        """
+        Adds additional data to the input message.
+        """
         start = time.perf_counter()
-
+        # TODO: enrichment implementation
         end = time.perf_counter()
         elapsed_time = end - start
         self.metrics.enrichTime = elapsed_time
@@ -110,8 +118,11 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
 
     @transition("validate")
     def validate(self):
+        """
+        Validates the input message.
+        """
         start = time.perf_counter()
-
+        # TODO: validation implementation
         end = time.perf_counter()
         elapsed_time = end - start
         self.metrics.validateTime = elapsed_time
@@ -119,52 +130,88 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
 
     @transition("translate")
     def translate(self):
+        """
+        Translates the input message to a different, supported format.
+        """
         start = time.perf_counter()
-
+        # TODO: translate implementation
         end = time.perf_counter()
         elapsed_time = end - start
         self.metrics.translateTime = elapsed_time
         self.operations.append(EdiOperations.TRANSLATE)
 
+    def _create_edi_result(self) -> EdiResult:
+        """
+        Creates an EdiResult
+        """
+        result_data = {
+            "metadata": self.meta_data.dict() if self.meta_data else None,
+            "metrics": self.metrics.dict(),
+            "inputMessage": self.input_message,
+            "operations": self.operations,
+            "errors": []
+        }
+
+        return EdiResult(**result_data)
+
     @transition("complete")
-    def complete(self):
+    def complete(self) -> EdiResult:
+        """
+        Marks the workflow as completed and generates an EDI Result.
+        :return: EdiResult
+        """
         self.operations.append(EdiOperations.COMPLETE)
+        return self._create_edi_result()
 
     @transition("cancel")
-    def cancel(self):
+    def cancel(self) -> EdiResult:
+        """
+        Marks the workflow as cancelled and generates an EDI Result.
+        :return: EdiResult
+        """
         self.operations.append(EdiOperations.CANCEL)
+        return self._create_edi_result()
 
     @transition("fail")
-    def fail(self):
+    def fail(self, reason: str, exception: Exception = None):
+        """
+        Marks the workflow as cancelled and generates an EDI Result.
+        :param reason: The reason the workflow failed
+        :param exception: The associated exception object if available. Defaults to None
+        :return: EdiResult
+        """
         self.operations.append(EdiOperations.FAIL)
 
-    def run(self, *args: EdiOperations):
+        edi_result = self._create_edi_result()
+        edi_result.errors.append({"msg": reason})
+
+        if exception:
+            edi_result.errors.append({"msg": str(exception)})
+        return edi_result
+
+    def run(self, enrich=True, validate=True, translate=True):
         """
         Convenience method used to run a workflow process.
-        Run accepts an optional list of EdiOperations to perform, ignoring operations which are required (analyze) and additional
-        operations used to terminate a workflow (cancel, complete, fail).
-        If a list is not provided, the method will execute each available operations as noted above.
-        If an exception occurs, the error is logged and the workflow is set to "fail"
-        The EdiOperations are expected to be listed in dependency order.
+        By default the workflow process includes: analyze, enrich, validate, and translate, and is marked as completed.
+        The method paramee
+        :param enrich: Indicates if the enrich step is executed. Defaults to True.
+        :param validate: Indicates if the validation step is executed. Defaults to True.
+        :param translate: Indicates if the translate step is executed. Defaults to True.
         """
-        excluded_operations = (
-            EdiOperations.ANALYZE,
-            EdiOperations.CANCEL,
-            EdiOperations.COMPLETE,
-            EdiOperations.FAIL,
-        )
-
-        if not args:
-            args = list(EdiOperations)
-
-        args = [a.lower() for a in args if a not in excluded_operations]
 
         try:
             self.analyze()
-            for method_name in args:
-                method = getattr(self, method_name)
-                method()
-            self.complete()
+
+            if enrich:
+                self.enrich()
+
+            if validate:
+                self.validate()
+
+            if translate:
+                self.translate()
+
+            return self.complete()
         except Exception as ex:
-            logger.exception(f"Error executing workflow method {method_name}")
-            self.fail()
+            logger.exception(f"Error executing workflow")
+            return self.fail()

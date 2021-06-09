@@ -15,8 +15,7 @@ from edi.core.workflows import EdiProcessor
 import pytest
 
 
-def test_workflow_state_progression(hl7_message):
-    """Tests linear workflow state transitions"""
+def test_linear_workflow_progression(hl7_message):
     edi = EdiProcessor(hl7_message)
     assert edi.state == "init"
     assert edi.input_message == hl7_message
@@ -44,7 +43,18 @@ def test_workflow_state_progression(hl7_message):
     assert edi.state == "translated"
     assert edi.operations == ["ANALYZE", "ENRICH", "VALIDATE", "TRANSLATE"]
 
-    edi.complete()
+    actual_result = edi.complete()
+    assert actual_result.metadata is not None
+    assert actual_result.metrics.analyzeTime > 0.0
+    assert actual_result.inputMessage == hl7_message
+    assert actual_result.operations == [
+        "ANALYZE",
+        "ENRICH",
+        "VALIDATE",
+        "TRANSLATE",
+        "COMPLETE",
+    ]
+
     assert edi.state == "completed"
     assert edi.operations == [
         "ANALYZE",
@@ -53,16 +63,6 @@ def test_workflow_state_progression(hl7_message):
         "TRANSLATE",
         "COMPLETE",
     ]
-
-    edi = EdiProcessor(hl7_message)
-    edi.cancel()
-    assert edi.state == "cancelled"
-    assert edi.operations == ["CANCEL"]
-
-    edi = EdiProcessor(hl7_message)
-    edi.fail()
-    assert edi.state == "failed"
-    assert edi.operations == ["FAIL"]
 
 
 def test_workflow_transition_errors(hl7_message):
@@ -163,7 +163,13 @@ def test_workflow_complete(hl7_message):
 def test_workflow_cancel(hl7_message):
     """Validates cancel transition invocation"""
     edi = EdiProcessor(hl7_message)
-    edi.cancel()
+    actual_result = edi.cancel()
+    assert actual_result.metadata is None
+    assert actual_result.metrics.analyzeTime == 0.0
+    assert actual_result.inputMessage == hl7_message
+    assert actual_result.operations == ["CANCEL"]
+    assert len(actual_result.errors) == 0
+
     assert edi.operations == ["CANCEL"]
 
     edi = EdiProcessor(hl7_message)
@@ -202,20 +208,27 @@ def test_workflow_cancel(hl7_message):
 def test_workflow_fail(hl7_message):
     """Validates fail transition invocation"""
     edi = EdiProcessor(hl7_message)
-    edi.fail()
+    actual_result = edi.fail("oops", ValueError("something happened"))
+    assert actual_result.metadata is None
+    assert actual_result.metrics.analyzeTime == 0.0
+    assert actual_result.inputMessage == hl7_message
+    assert actual_result.operations == ["FAIL"]
+    assert actual_result.errors == [{"msg": "oops"}, {"msg": "something happened"}]
+
     assert edi.operations == ["FAIL"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
-    edi.fail()
+    actual_result = edi.fail("oops")
+    assert actual_result.errors == [{"msg": "oops"}]
     assert edi.operations == ["ANALYZE", "ENRICH", "FAIL"]
 
     edi = EdiProcessor(hl7_message)
     edi.analyze()
     edi.enrich()
     edi.validate()
-    edi.fail()
+    edi.fail("oops")
     assert edi.operations == ["ANALYZE", "ENRICH", "VALIDATE", "FAIL"]
 
     edi = EdiProcessor(hl7_message)
@@ -223,7 +236,7 @@ def test_workflow_fail(hl7_message):
     edi.enrich()
     edi.validate()
     edi.translate()
-    edi.fail()
+    edi.fail("oops")
     assert edi.operations == [
         "ANALYZE",
         "ENRICH",
@@ -245,7 +258,7 @@ def test_workflow_run(hl7_message):
     ]
 
     edi = EdiProcessor(hl7_message)
-    edi.run(EdiOperations.VALIDATE)
+    edi.run(enrich=False, translate=False)
     assert edi.operations == [
         EdiOperations.ANALYZE,
         EdiOperations.VALIDATE,

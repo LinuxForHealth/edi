@@ -5,7 +5,7 @@ EDI Pydantic Domain Models.
 """
 from pydantic import BaseModel
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 
 class BaseMessageType(str, Enum):
@@ -104,8 +104,8 @@ class EdiResult(BaseModel):
     EDI Processing Result
     """
 
-    metadata: EdiMessageMetadata
-    metrics: EdiProcessingMetrics
+    metadata: Optional[EdiMessageMetadata]
+    metrics: Optional[EdiProcessingMetrics]
     inputMessage: str
     operations: List[EdiOperations]
     errors: List[dict] = []
