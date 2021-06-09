@@ -1,3 +1,4 @@
+import time
 from json import JSONDecodeError
 import json
 import logging
@@ -46,3 +47,8 @@ def load_xml(message: str):
         logger.exception("Error loading XML message")
         raise
     return xml_message
+
+
+def perf_counter_ms():
+    """Returns a millisecond performance counter"""
+    return time.perf_counter() * 1_000

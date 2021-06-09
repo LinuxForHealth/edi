@@ -3,7 +3,6 @@ workflows.py
 
 Defines EDI processing workflows.
 """
-import time
 
 import xworkflows
 from xworkflows import transition
@@ -16,6 +15,7 @@ from edi.core.models import (
     EdiOperations,
     EdiResult,
 )
+from edi.core.support import perf_counter_ms
 import logging
 
 logger = logging.getLogger(__name__)
@@ -103,12 +103,12 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
         """
         Generates EdiMessageMetadata for the input message.
         """
-        start = time.perf_counter()
+        start = perf_counter_ms()
 
         analyzer = EdiAnalyzer(self.input_message)
         self.meta_data = analyzer.analyze()
 
-        end = time.perf_counter()
+        end = perf_counter_ms()
         elapsed_time = end - start
         self.metrics.analyzeTime = elapsed_time
         self.operations.append(EdiOperations.ANALYZE)
@@ -118,9 +118,9 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
         """
         Adds additional data to the input message.
         """
-        start = time.perf_counter()
+        start = perf_counter_ms()
         # TODO: enrichment implementation
-        end = time.perf_counter()
+        end = perf_counter_ms()
         elapsed_time = end - start
         self.metrics.enrichTime = elapsed_time
         self.operations.append(EdiOperations.ENRICH)
@@ -130,9 +130,9 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
         """
         Validates the input message.
         """
-        start = time.perf_counter()
+        start = perf_counter_ms()
         # TODO: validation implementation
-        end = time.perf_counter()
+        end = perf_counter_ms()
         elapsed_time = end - start
         self.metrics.validateTime = elapsed_time
         self.operations.append(EdiOperations.VALIDATE)
@@ -142,9 +142,9 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
         """
         Translates the input message to a different, supported format.
         """
-        start = time.perf_counter()
+        start = perf_counter_ms()
         # TODO: translate implementation
-        end = time.perf_counter()
+        end = perf_counter_ms()
         elapsed_time = end - start
         self.metrics.translateTime = elapsed_time
         self.operations.append(EdiOperations.TRANSLATE)

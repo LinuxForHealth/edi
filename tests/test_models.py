@@ -14,7 +14,7 @@ from edi.core.models import (
 def test_edi_processing_metrics():
     data = EdiProcessingMetrics.Config.schema_extra["example"]
     metrics = EdiProcessingMetrics(**data)
-    assert metrics.total_time == 2.78094223
+    assert metrics.totalTime == 2.78094223
 
 
 def test_edi_message_metadata():
