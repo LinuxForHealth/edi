@@ -23,7 +23,7 @@ The LinuxForHealth EDI workflow processor, EdiProcessor, includes the following 
 
 | Transition Name | Description                                                                                                           | Required |
 | --------------- | --------------------------------------------------------------------------------------------------------------------- | -------- |
-| Analyze         | Generates an EdiMessageMetadata object for the EDI Message.                                                           | Yes      |
+| Analyze         | Generates an EdiMessageMetadata object for the EDI Message                                                         | Yes      |
 | Enrich          | Enriches the input message with additional data using custom transformations.                                         | No       |
 | Validate        | Validates the input message.                                                                                          | No       |
 | Translate       | Translates the input message in a supported format to a different supported format. Example: translate HL7v2 to FHIR. | No       |
