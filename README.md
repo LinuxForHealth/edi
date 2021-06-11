@@ -46,7 +46,6 @@ The LinuxForHealth EDI development environment relies on the following software 
 - [git](https://git-scm.com) for project version control
 - [Python 3.8 or higher](https://www.python.org/downloads/) for runtime/coding support
 - [Pipenv](https://pipenv.pypa.io) for Python dependency management  
-- [Docker Compose 1.27.1 or higher](https://docs.docker.com/compose/install/) for a local container runtime
 
 ### Project Setup and Validation
 ```shell
