@@ -13,7 +13,7 @@ root:
   level: INFO
   handlers: [console]
 loggers:
-  app:
+  edi:
     level: INFO
   uvicorn:
     level: INFO
