@@ -6,9 +6,9 @@
 ![Template CI](https://github.com/linuxforhealth/edi/actions/workflows/continuous-integration.yml/badge.svg)
 ![Image Build](https://github.com/linuxforhealth/edi/actions/workflows/image-build.yml/badge.svg)
 <br>
-![GitHub Issues](https://img.shields.io/github/issues/dixonwhitmire/fastapi-template)
-![GitHub Forks](https://img.shields.io/github/forks/dixonwhitmire/fastapi-template)
-![GitHub Stars](https://img.shields.io/github/stars/dixonwhitmire/fastapi-template)
+![GitHub Issues](https://img.shields.io/github/issues/linuxforhealth/edi)
+![GitHub Forks](https://img.shields.io/github/forks/linuxforhealth/edi)
+![GitHub Stars](https://img.shields.io/github/stars/linuxforhealth/edi)
 
 ## Overview
 
@@ -46,7 +46,6 @@ The LinuxForHealth EDI development environment relies on the following software 
 - [git](https://git-scm.com) for project version control
 - [Python 3.8 or higher](https://www.python.org/downloads/) for runtime/coding support
 - [Pipenv](https://pipenv.pypa.io) for Python dependency management  
-- [Docker Compose 1.27.1 or higher](https://docs.docker.com/compose/install/) for a local container runtime
 
 ### Project Setup and Validation
 ```shell
