@@ -16,8 +16,7 @@ pydantic = "*"
 
 [dev-packages]
 pytest = "*"
-pytest-asyncio = "*"
-black = {extras = ["d"], version = "*"}
+black = "*"
 pre-commit = "*"
 
 [pipenv]
