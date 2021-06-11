@@ -12,6 +12,7 @@ format="black -t py38 edi tests"
 pyaml = "*"
 lxml = "*"
 xworkflows = "*"
+pydantic = "*"
 
 [dev-packages]
 pytest = "*"
