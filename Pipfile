@@ -9,19 +9,13 @@ check-format="black -t py38 --check --diff edi tests"
 format="black -t py38 edi tests"
 
 [packages]
-fastapi = "*"
 pyaml = "*"
-requests = "*"
-slowapi = "*"
-uvicorn = {extras = ["standard"], version = "*"}
-httpx = "*"
 lxml = "*"
 xworkflows = "*"
 
 [dev-packages]
 pytest = "*"
 pytest-asyncio = "*"
-flake8 = "*"
 black = {extras = ["d"], version = "*"}
 pre-commit = "*"
 
