@@ -23,6 +23,8 @@ class EdiMessageType(str, Enum):
     Supported EDI Message Types
     """
 
+    CCDA = "C-CDA"
+    DICOM = "DICOM"
     FHIR = "FHIR"
     HL7 = "HL7"
     X12 = "X12"
@@ -135,26 +137,5 @@ class EdiResult(BaseModel):
                     "COMPLETE",
                 ],
                 "errors": [],
-            }
-        }
-
-
-class StatusResponse(BaseModel):
-    """
-    Status check response model.
-    Provides component specific and overall status information
-    """
-
-    application: str
-    applicationVersion: str
-    isReloadEnabled: bool
-
-    class Config:
-        allow_mutation = False
-        schema_extra = {
-            "example": {
-                "application": "edi.main:app",
-                "applicationVersion": "0.25.0",
-                "isReloadEnabled": False,
             }
         }
