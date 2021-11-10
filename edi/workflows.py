@@ -4,82 +4,36 @@ workflows.py
 Defines EDI processing workflows.
 """
 
-import xworkflows
-from xworkflows import transition
 from typing import Any, List, Optional
 
-from edi.core.analysis import EdiAnalyzer
-from edi.core.models import (
+from edi.analysis import EdiAnalyzer
+from edi.models import (
     EdiMessageMetadata,
     EdiProcessingMetrics,
     EdiOperations,
     EdiResult,
 )
-from edi.core.support import perf_counter_ms
+from edi.support import perf_counter_ms
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class EdiWorkflow(xworkflows.Workflow):
+class EdiWorkflow:
     """
-    Defines the states and transitions used in an EDI workflow.
+    Defines the steps and transitions used in an EDI workflow.
 
-    States are used to specify the current state of processing, while transitions are methods which perform a task and
-    then update the state. The EdiWorkflow is used within an EdiProcess to process an EDI message.
+    The EdiWorkflow is used within an EdiProcess to process an EDI message.
 
     Transitions in the EDI workflow include:
-    <ul>
-        <li>analyze - Generates an EdiMessageMetadata object for the EDI Message.</li>
-        <li>enrich - Enriches the input message with additional data using custom transformations.</li>
-        <li>validate - Validates the input message.</li>
-        <li>translate- Translates the input message in a supported format to a different supported format. Example: translate HL7v2 to FHIR.</li>
-        <li>complete - Marks the EDI workflow as complete, returning an EDI result.</li>
-        <li>cancel - Cancels the current workflow process, returning an EDI result.</li>
-        <li>fail - Reached if the workflow encounters an unrecoverable error. Returns an EDI result.</li>
-    </ul>
+        * analyze - Generates an EdiMessageMetadata object for the EDI Message.
+        * enrich - Enriches the input message with additional data using custom transformations.
+        * validate - Validates the input message.
+        * translate- Translates the input message in a supported format to a different supported format. Example: translate HL7v2 to FHIR
+        * complete - Marks the EDI workflow as complete, returning an EDI result.
+        * cancel - Cancels the current workflow process, returning an EDI result.
+        * fail - Reached if the workflow encounters an unrecoverable error. Returns an EDI result
     """
-
-    states = (
-        ("init", "Initial State"),
-        ("analyzed", "Analyze Message"),
-        ("enriched", "Enrich Message"),
-        ("validated", "Validate Message"),
-        ("translated", "Translate Message"),
-        ("completed", "Complete Processing"),
-        ("cancelled", "Cancel Processing"),
-        ("failed", "Fail Processing"),
-    )
-
-    transitions = (
-        ("analyze", "init", "analyzed"),
-        ("enrich", "analyzed", "enriched"),
-        ("validate", ("analyzed", "enriched"), "validated"),
-        ("translate", ("analyzed", "enriched", "validated"), "translated"),
-        ("complete", ("analyzed", "enriched", "validated", "translated"), "completed"),
-        (
-            "cancel",
-            ("init", "analyzed", "enriched", "validated", "translated"),
-            "cancelled",
-        ),
-        ("fail", ("init", "analyzed", "enriched", "validated", "translated"), "failed"),
-    )
-
-    initial_state = "init"
-
-
-class EdiProcessor(xworkflows.WorkflowEnabled):
-    """
-    Processes EDI Messages.
-    """
-
-    state = EdiWorkflow()
-
-    supported_run_operations: List[EdiOperations] = [
-        EdiOperations.ENRICH,
-        EdiOperations.VALIDATE,
-        EdiOperations.TRANSLATE,
-    ]
 
     def __init__(self, input_message: Any):
         """
@@ -98,7 +52,11 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
         )
         self.operations: Optional[EdiOperations] = []
 
-    @transition("analyze")
+    @property
+    def current_state(self) -> EdiOperations:
+        """Returns the current operation state"""
+        return self.operations[-1] if self.operations else None
+
     def analyze(self):
         """
         Generates EdiMessageMetadata for the input message.
@@ -113,7 +71,6 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
         self.metrics.analyzeTime = elapsed_time
         self.operations.append(EdiOperations.ANALYZE)
 
-    @transition("enrich")
     def enrich(self):
         """
         Adds additional data to the input message.
@@ -125,7 +82,6 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
         self.metrics.enrichTime = elapsed_time
         self.operations.append(EdiOperations.ENRICH)
 
-    @transition("validate")
     def validate(self):
         """
         Validates the input message.
@@ -137,7 +93,6 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
         self.metrics.validateTime = elapsed_time
         self.operations.append(EdiOperations.VALIDATE)
 
-    @transition("translate")
     def translate(self):
         """
         Translates the input message to a different, supported format.
@@ -163,7 +118,6 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
 
         return EdiResult(**result_data)
 
-    @transition("complete")
     def complete(self) -> EdiResult:
         """
         Marks the workflow as completed and generates an EDI Result.
@@ -172,7 +126,6 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
         self.operations.append(EdiOperations.COMPLETE)
         return self._create_edi_result()
 
-    @transition("cancel")
     def cancel(self) -> EdiResult:
         """
         Marks the workflow as cancelled and generates an EDI Result.
@@ -181,7 +134,6 @@ class EdiProcessor(xworkflows.WorkflowEnabled):
         self.operations.append(EdiOperations.CANCEL)
         return self._create_edi_result()
 
-    @transition("fail")
     def fail(self, reason: str, exception: Exception = None):
         """
         Marks the workflow as cancelled and generates an EDI Result.

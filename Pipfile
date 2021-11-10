@@ -9,15 +9,14 @@ check-format="black -t py38 --check --diff edi tests"
 format="black -t py38 edi tests"
 
 [packages]
-pyaml = "*"
-lxml = "*"
-xworkflows = "*"
-pydantic = "*"
+pyaml = ">=20.4.0,<21.0.0"
+lxml = ">=4.6.3,<5.0.0"
+pydantic = ">=1.8.2,<2.0.0"
 
 [dev-packages]
-pytest = "*"
-black = "*"
-pre-commit = "*"
+pytest = ">=6.2.4, <7.0.0*"
+black = ">=21.6b0"
+pre-commit = ">=2.13.0"
 
 [pipenv]
 allow_prereleases = true

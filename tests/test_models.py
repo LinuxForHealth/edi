@@ -4,7 +4,7 @@ test_models.py
 Tests model features such as properties, custom validations, and processing methods.
 Each model is tested with it's Open API "example"
 """
-from edi.core.models import (
+from edi.models import (
     EdiProcessingMetrics,
     EdiMessageMetadata,
     EdiResult,

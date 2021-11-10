@@ -3,8 +3,8 @@ analysis.py
 
 Classes and functions used to parse and process EDI message metadata.
 """
-from edi.core.models import EdiMessageMetadata, EdiMessageType, BaseMessageType
-from edi.core.support import load_json, load_xml, create_checksum
+from edi.models import EdiMessageMetadata, EdiMessageType, BaseMessageType
+from edi.support import load_json, load_xml, create_checksum
 from lxml.etree import _Element
 from typing import Optional
 
@@ -14,12 +14,15 @@ class EdiAnalyzer:
     Generates EdiMessageMetadata from an EDI Message.
     """
 
-    def __init__(self, input_message: str, sample_length: int = 100):
+    def __init__(self, input_message: str):
+        """
+        :param input_message: The input message to be analyzed.
+        """
+
         if not input_message or input_message.isspace():
             raise ValueError("Input message is empty, blank, or None")
 
         self.input_message: str = input_message
-        self.message_sample: str = input_message[0:sample_length]
         self.base_message_type: BaseMessageType = self._parse_base_message_type()
         self.message_type: EdiMessageType = self._parse_message_type()
 

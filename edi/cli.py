@@ -5,8 +5,8 @@ Implements a command line interface for the EDI service/application.
 """
 import argparse
 
-from edi.core.models import EdiResult
-from edi.core.workflows import EdiProcessor
+from edi.models import EdiResult
+from edi.workflows import EdiWorkflow
 
 CLI_DESCRIPTION = """
 Analyze, Enrich, Validate and Translate EDI Messages using the LinuxForHealth CLI!
@@ -22,6 +22,13 @@ def create_arg_parser() -> argparse.Namespace:
         description=CLI_DESCRIPTION,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="All messages are analyzed by default",
+    )
+    arg_parser.add_argument(
+        "-a",
+        "--all",
+        help="executes all optional steps: enrich, validate, translate",
+        action="store_const",
+        const="enrich",
     )
     arg_parser.add_argument(
         "-e",
@@ -57,10 +64,12 @@ def create_arg_parser() -> argparse.Namespace:
     return arg_parser.parse_args()
 
 
-def process_edi(edi: str, **kwargs) -> EdiResult:
+def process_edi(edi: str) -> EdiResult:
     """
     Processes an EDI message.
-    Keyword arguments are used to drive workflow processing and align with CLI options. kwargs include:
+    Keyword arguments are used to drive workflow processing and align with CLI options. The "analyze" step is included
+    by default.
+    kwargs include:
     - enrich
     - validate
     - translate
@@ -71,31 +80,33 @@ def process_edi(edi: str, **kwargs) -> EdiResult:
     with open(args.edi_file) as f:
         input_message = ",".join(f.readlines())
 
-    processor: EdiProcessor = EdiProcessor(input_message)
-    processor.analyze()
+    workflow: EdiWorkflow = EdiWorkflow(input_message)
+    workflow.analyze()
+
+    if args.all:
+        workflow.enrich()
+        workflow.validate()
+        workflow.translate()
+        result = workflow.complete()
+        return result
 
     if args.enrich:
-        processor.enrich()
+        workflow.enrich()
 
     if args.validate:
-        processor.validate()
+        workflow.validate()
 
     if args.translate:
-        processor.translate()
+        workflow.translate()
 
-    result = processor.complete()
+    result = workflow.complete()
     return result
 
 
 if __name__ == "__main__":
 
     args = create_arg_parser()
-    edi_result = process_edi(
-        args.edi_file,
-        enrich=args.enrich,
-        validate=args.validate,
-        translate=args.translate,
-    )
+    edi_result = process_edi(args.edi_file)
     if args.pretty:
         print(edi_result.json(indent=4, sort_keys=True))
     else:

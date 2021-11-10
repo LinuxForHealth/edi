@@ -3,12 +3,12 @@ test_support.py
 
 Tests EDI support functions.
 """
-from edi.core.models import EdiProcessingMetrics
-from edi.core.support import create_checksum, load_xml, load_json, perf_counter_ms
+from edi.models import EdiProcessingMetrics
+from edi.support import create_checksum, load_xml, load_json, perf_counter_ms
 import pytest
 from lxml.etree import ParseError
 from json import JSONDecodeError
-from edi.core.support import time
+from edi.support import time
 
 
 @pytest.fixture

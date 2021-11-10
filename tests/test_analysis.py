@@ -3,9 +3,9 @@ test_analysis.py
 
 Unit tests for EdiAnalyzer
 """
-from edi.core.models import EdiMessageMetadata
-from edi.core.analysis import EdiAnalyzer
-from edi.core.models import EdiMessageType, BaseMessageType
+from edi.models import EdiMessageMetadata
+from edi.analysis import EdiAnalyzer
+from edi.models import EdiMessageType, BaseMessageType
 import pytest
 
 
@@ -29,9 +29,8 @@ def test_init_value_error(input_data):
 )
 def test_init(fixture_name, base_message_type, message_type, request):
     message_fixture = request.getfixturevalue(fixture_name)
-    analyzer = EdiAnalyzer(message_fixture, sample_length=100)
+    analyzer = EdiAnalyzer(message_fixture)
     assert analyzer.input_message == message_fixture
-    assert analyzer.message_sample == message_fixture[0:100]
     assert analyzer.base_message_type == base_message_type
     assert analyzer.message_type == message_type
 
@@ -45,7 +44,7 @@ def test_analyze_hl7(hl7_message):
         "messageSize": 884,
         "recordCount": 8,
     }
-    analyzer = EdiAnalyzer(hl7_message, sample_length=100)
+    analyzer = EdiAnalyzer(hl7_message)
     actual_metadata = analyzer.analyze()
 
     expected_metadata = EdiMessageMetadata(**expected_data)
@@ -61,7 +60,7 @@ def test_analyze_x12(x12_message):
         "messageSize": 509,
         "recordCount": 17,
     }
-    analyzer = EdiAnalyzer(x12_message, sample_length=100)
+    analyzer = EdiAnalyzer(x12_message)
     actual_metadata = analyzer.analyze()
 
     expected_metadata = EdiMessageMetadata(**expected_data)
@@ -82,7 +81,7 @@ def test_analyze_fhir_xml(fhir_xml_message):
         "recordCount": 1,
     }
 
-    analyzer = EdiAnalyzer(fhir_xml_message, sample_length=100)
+    analyzer = EdiAnalyzer(fhir_xml_message)
     actual_metadata = analyzer.analyze()
 
     expected_metadata = EdiMessageMetadata(**expected_data)
@@ -103,7 +102,7 @@ def test_analyze_fhir_json(fhir_json_message):
         "recordCount": 1,
     }
 
-    analyzer = EdiAnalyzer(fhir_json_message, sample_length=100)
+    analyzer = EdiAnalyzer(fhir_json_message)
     actual_metadata = analyzer.analyze()
 
     expected_metadata = EdiMessageMetadata(**expected_data)

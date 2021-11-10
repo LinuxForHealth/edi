@@ -31,9 +31,10 @@ EdiWorkflow Transitions Include:
 
 Supported formats include: 
 * ASC X12 5010
-* C-CDA  
+* C-CDA
+* DICOM  
 * HL7v2
-* FHIR R4
+* FHIR-R4
 
 This project is currently under construction. Please refer to the [LinuxForHealth EDI Issue Board](https://github.com/LinuxForHealth/edi/issues) to review the current "to-dos" and "to-dones".
 
@@ -60,7 +61,7 @@ pipenv run pytest
 ### CLI
 ```shell
 # run within project root directory
-pipenv run cli -p samples/270.x12
+pipenv run cli -p demo-files/270.x12
 ```
 EdiResult Output:
 ```json
@@ -99,36 +100,44 @@ Under Development
 pipenv run python3
 ```
 
-Opens a Python interpreter
+Open a Python interpreter
+
 ```python
 import pprint
-from edi.core.workflows import EdiProcessor
+from edi.workflows import EdiWorkflow
+
 with open("./samples/270.x12") as f:
     edi_message = ",".join(f.readlines())
-    edi = EdiProcessor(edi_message)
+    edi = EdiWorkflow(edi_message)
     edi.analyze()
     edi_result = edi.complete()
     pprint.pprint(edi_result.dict())
-# result
-{'errors': [],
- 'inputMessage': 'ISA*00*          *00*          *ZZ*890069730      '
-                 '*ZZ*154663145      '
-                 '*200929*1705*|*00501*000000001*0*T*:~GS*HS*890069730*154663145*20200929*1705*0001*X*005010X279A1~ST*270*0001*005010X279A1~BHT*0022*13*10001234*20200929*1319~HL*1**20*1~NM1*PR*2*UNIFIED '
-                 'INSURANCE CO*****PI*842610001~HL*2*1*21*1~NM1*1P*2*DOWNTOWN '
-                 'MEDICAL '
-                 'CENTER*****XX*2868383243~HL*3*2*22*0~TRN*1*1*1453915417~NM1*IL*1*DOE*JOHN****MI*11122333301~DMG*D8*19800519~DTP*291*D8*20200101~EQ*30~SE*13*0001~GE*1*0001~IEA*1*000010216~\n',
- 'metadata': {'baseMessageType': <BaseMessageType.TEXT: 'TEXT'>,
-              'checksum': '578b8f172f2039cfcc1ec4b37eb8a3976e50577fb085823abbfead071e68d1d8',
-              'implementationVersions': None,
-              'messageSize': 494,
-              'messageType': <EdiMessageType.X12: 'X12'>,
-              'recordCount': 17,
-              'specificationVersion': '005010X279A1'},
- 'metrics': {'analyzeTime': 0.11884200002532452,
-             'enrichTime': 0.0,
-             'totalTime': 0.11884200002532452,
-             'translateTime': 0.0,
-             'validateTime': 0.0},
- 'operations': [<EdiOperations.ANALYZE: 'ANALYZE'>,
-                <EdiOperations.COMPLETE: 'COMPLETE'>]}
+```
+
+EdiResult
+```json
+{
+    "errors": [],
+    "inputMessage": "ISA*00*          *00*          *ZZ*890069730      *ZZ*154663145      *200929*1705*|*00501*000000001*0*T*:~GS*HS*890069730*154663145*20200929*1705*0001*X*005010X279A1~ST*270*0001*005010X279A1~BHT*0022*13*10001234*20200929*1319~HL*1**20*1~NM1*PR*2*UNIFIED INSURANCE CO*****PI*842610001~HL*2*1*21*1~NM1*1P*2*DOWNTOWN MEDICAL CENTER*****XX*2868383243~HL*3*2*22*0~TRN*1*1*1453915417~NM1*IL*1*DOE*JOHN****MI*11122333301~DMG*D8*19800519~DTP*291*D8*20200101~EQ*30~SE*13*0001~GE*1*0001~IEA*1*000010216~\n",
+    "metadata": {
+        "baseMessageType": "TEXT",
+        "checksum": "578b8f172f2039cfcc1ec4b37eb8a3976e50577fb085823abbfead071e68d1d8",
+        "implementationVersions": null,
+        "messageSize": 494,
+        "messageType": "X12",
+        "recordCount": 17,
+        "specificationVersion": "005010X279A1"
+    },
+    "metrics": {
+        "analyzeTime": 0.1178989999999942,
+        "enrichTime": 0.0,
+        "totalTime": 0.1178989999999942,
+        "translateTime": 0.0,
+        "validateTime": 0.0
+    },
+    "operations": [
+        "ANALYZE",
+        "COMPLETE"
+    ]
+}
 ```
