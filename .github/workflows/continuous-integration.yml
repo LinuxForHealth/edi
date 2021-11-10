@@ -19,22 +19,23 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install Pipenv
-      run: pip install pipenv
-    - name: Run tests
+    - name: Install dependencies
       run: |
-        pipenv install --dev
-        pipenv run pytest
-    - name: Lint With Black
+        python -m pip install --upgrade pip setuptools
+        pip install -e .[dev]
+    - name: Validate Formatting
       run: |
-        pipenv run check-format
+        black -t py38 --check --diff ./src
+    - name: Execute Unit Tests
+      run: |
+        pytest
     - name: Run EDI CLI
       run: |
         for f in demo-files/*; do
-           pipenv run cli -a $f 1> /dev/null
-           pipenv run cli -e $f 1> /dev/null
-           pipenv run cli -v $f 1> /dev/null
-           pipenv run cli -t $f 1> /dev/null
-           pipenv run cli -e -v -t -p $f 1> /dev/null
-           pipenv run cli -p $f 1> /dev/null
+           cli -a $f 1> /dev/null
+           cli -e $f 1> /dev/null
+           cli -v $f 1> /dev/null
+           cli -t $f 1> /dev/null
+           cli -e -v -t -p $f 1> /dev/null
+           cli -p $f 1> /dev/null
         done

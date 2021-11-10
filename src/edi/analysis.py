@@ -3,8 +3,8 @@ analysis.py
 
 Classes and functions used to parse and process EDI message metadata.
 """
-from edi.models import EdiMessageMetadata, EdiMessageType, BaseMessageType
-from edi.support import load_json, load_xml, create_checksum
+from .models import EdiMessageMetadata, EdiMessageType, BaseMessageType
+from .support import load_json, load_xml, create_checksum
 from lxml.etree import _Element
 from typing import Optional
 

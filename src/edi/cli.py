@@ -5,8 +5,8 @@ Implements a command line interface for the EDI service/application.
 """
 import argparse
 
-from edi.models import EdiResult
-from edi.workflows import EdiWorkflow
+from .models import EdiResult
+from .workflows import EdiWorkflow
 
 CLI_DESCRIPTION = """
 Analyze, Enrich, Validate and Translate EDI Messages using the LinuxForHealth CLI!
@@ -64,7 +64,7 @@ def create_arg_parser() -> argparse.Namespace:
     return arg_parser.parse_args()
 
 
-def process_edi(edi: str) -> EdiResult:
+def process_edi(args) -> EdiResult:
     """
     Processes an EDI message.
     Keyword arguments are used to drive workflow processing and align with CLI options. The "analyze" step is included
@@ -103,10 +103,9 @@ def process_edi(edi: str) -> EdiResult:
     return result
 
 
-if __name__ == "__main__":
-
+def main():
     args = create_arg_parser()
-    edi_result = process_edi(args.edi_file)
+    edi_result = process_edi(args)
     if args.pretty:
         print(edi_result.json(indent=4, sort_keys=True))
     else:

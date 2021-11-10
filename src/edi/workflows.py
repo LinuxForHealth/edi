@@ -4,16 +4,16 @@ workflows.py
 Defines EDI processing workflows.
 """
 
-from typing import Any, List, Optional
+from typing import Any, Optional
 
-from edi.analysis import EdiAnalyzer
-from edi.models import (
+from .analysis import EdiAnalyzer
+from .models import (
     EdiMessageMetadata,
     EdiProcessingMetrics,
     EdiOperations,
     EdiResult,
 )
-from edi.support import perf_counter_ms
+from .support import perf_counter_ms
 import logging
 
 logger = logging.getLogger(__name__)

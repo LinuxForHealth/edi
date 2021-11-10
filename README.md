@@ -49,13 +49,14 @@ The LinuxForHealth EDI development environment relies on the following software 
 
 ### Project Setup and Validation
 ```shell
-pip install --upgrade pip
+pip install --upgrade pip setuptools
 
 git clone https://github.com/LinuxForHealth/edi
 cd edi
 
-pipenv sync --dev 
-pipenv run pytest
+python3 -m venv venv && source venv/bin/activate && pip install --upgrade pip setuptools 
+pip install -e .[dev]
+pytest
 ```
 
 ### CLI
@@ -104,7 +105,7 @@ Open a Python interpreter
 
 ```python
 import pprint
-from edi.workflows import EdiWorkflow
+from src.edi.workflows import EdiWorkflow
 
 with open("./samples/270.x12") as f:
     edi_message = ",".join(f.readlines())
