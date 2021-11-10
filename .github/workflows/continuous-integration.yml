@@ -31,7 +31,7 @@ jobs:
         pytest
     - name: Run EDI CLI
       run: |
-        for f in demo-files/demo.*; do
+        for f in demo-files/*; do
            cli -a $f 1> /dev/null
            cli -e $f 1> /dev/null
            cli -v $f 1> /dev/null
