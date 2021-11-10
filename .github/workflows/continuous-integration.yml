@@ -31,10 +31,10 @@ jobs:
     - name: Run EDI CLI
       run: |
         for f in demo-files/*; do
-           cli -a $f 1> /dev/null
-           cli -e $f 1> /dev/null
-           cli -v $f 1> /dev/null
-           cli -t $f 1> /dev/null
-           cli -e -v -t -p $f 1> /dev/null
-           cli -p $f 1> /dev/null
+           pipenv run cli -a $f 1> /dev/null
+           pipenv run cli -e $f 1> /dev/null
+           pipenv run cli -v $f 1> /dev/null
+           pipenv run cli -t $f 1> /dev/null
+           pipenv run cli -e -v -t -p $f 1> /dev/null
+           pipenv run cli -p $f 1> /dev/null
         done
