@@ -11,7 +11,7 @@ import pytest
 
 @pytest.mark.parametrize(
     "input_data",
-    [None, "", "        ", "John, Doe, MD, 1400 Anyhoo Lane"],
+    [None, "", "        "],
 )
 def test_init_value_error(input_data):
     with pytest.raises(ValueError):
@@ -19,20 +19,20 @@ def test_init_value_error(input_data):
 
 
 @pytest.mark.parametrize(
-    "fixture_name, base_message_type, message_type",
+    "fixture_name",
     [
-        ("hl7_message", BaseMessageFormat.TEXT, EdiMessageFormat.HL7),
-        ("x12_message", BaseMessageFormat.TEXT, EdiMessageFormat.X12),
-        ("fhir_json_message", BaseMessageFormat.JSON, EdiMessageFormat.FHIR),
-        ("fhir_xml_message", BaseMessageFormat.XML, EdiMessageFormat.FHIR),
+        "hl7_message",
+        "x12_message",
+        "fhir_json_message",
+        "fhir_xml_message",
     ],
 )
-def test_init(fixture_name, base_message_type, message_type, request):
+def test_init(fixture_name, request):
     message_fixture = request.getfixturevalue(fixture_name)
     analyzer = EdiAnalyzer(message_fixture)
     assert analyzer.input_message == message_fixture
-    assert analyzer.base_message_format == base_message_type
-    assert analyzer.message_format == message_type
+    assert analyzer.base_message_format is None
+    assert analyzer.message_format is None
 
 
 def test_analyze_hl7(hl7_message):
@@ -107,3 +107,9 @@ def test_analyze_fhir_json(fhir_json_message):
 
     expected_metadata = EdiMessageMetadata(**expected_data)
     assert actual_metadata.dict() == expected_metadata.dict()
+
+
+def test_analyze_unsupported_format():
+    with pytest.raises(ValueError):
+        analyzer = EdiAnalyzer("John,Doe,1400 Anyhoo Lane,Spartanburg,SC,29302")
+        analyzer.analyze()

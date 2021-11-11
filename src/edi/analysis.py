@@ -16,6 +16,7 @@ class EdiAnalyzer:
 
     def __init__(self, input_message: str):
         """
+        Validates the input message
         :param input_message: The input message to be analyzed.
         """
 
@@ -23,8 +24,8 @@ class EdiAnalyzer:
             raise ValueError("Input message is empty, blank, or None")
 
         self.input_message: str = input_message
-        self.base_message_format: BaseMessageFormat = self._parse_base_message_format()
-        self.message_format: EdiMessageFormat = self._parse_message_format()
+        self.base_message_format = None
+        self.message_format = None
 
     def _is_hl7(self) -> bool:
         """
@@ -186,6 +187,9 @@ class EdiAnalyzer:
         """
         Returns EdiMessageMetadata for the associated message
         """
+        self.base_message_format = self._parse_base_message_format()
+        self.message_format = self._parse_message_format()
+
         metadata_fields = {
             "baseMessageFormat": self.base_message_format.value,
             "messageFormat": self.message_format.value,
@@ -208,6 +212,8 @@ class EdiAnalyzer:
             additional_fields = self._analyze_fhir_xml_data()
         elif self.message_format == EdiMessageFormat.X12:
             additional_fields = self._analyze_x12_data()
+        else:
+            raise ValueError("Unsupported format")
 
         metadata_fields.update(additional_fields)
         message_metadata = EdiMessageMetadata(**metadata_fields)
