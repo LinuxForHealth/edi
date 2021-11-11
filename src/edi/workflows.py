@@ -13,7 +13,7 @@ from .models import (
     EdiOperations,
     EdiResult,
 )
-from .support import perf_counter_ms
+from .support import Timer
 import logging
 
 logger = logging.getLogger(__name__)
@@ -61,48 +61,39 @@ class EdiWorkflow:
         """
         Generates EdiMessageMetadata for the input message.
         """
-        start = perf_counter_ms()
+        with Timer() as t:
+            analyzer = EdiAnalyzer(self.input_message)
+            self.meta_data = analyzer.analyze()
+            self.operations.append(EdiOperations.ANALYZE)
 
-        analyzer = EdiAnalyzer(self.input_message)
-        self.meta_data = analyzer.analyze()
-
-        end = perf_counter_ms()
-        elapsed_time = end - start
-        self.metrics.analyzeTime = elapsed_time
-        self.operations.append(EdiOperations.ANALYZE)
+        self.metrics.analyzeTime = t.elapsed_time
 
     def enrich(self):
         """
         Adds additional data to the input message.
         """
-        start = perf_counter_ms()
-        # TODO: enrichment implementation
-        end = perf_counter_ms()
-        elapsed_time = end - start
-        self.metrics.enrichTime = elapsed_time
-        self.operations.append(EdiOperations.ENRICH)
+        with Timer() as t:
+            # TODO: enrichment implementation
+            self.operations.append(EdiOperations.ENRICH)
+        self.metrics.enrichTime = t.elapsed_time
 
     def validate(self):
         """
         Validates the input message.
         """
-        start = perf_counter_ms()
-        # TODO: validation implementation
-        end = perf_counter_ms()
-        elapsed_time = end - start
-        self.metrics.validateTime = elapsed_time
-        self.operations.append(EdiOperations.VALIDATE)
+        with Timer() as t:
+            # TODO: validation implementation
+            self.operations.append(EdiOperations.VALIDATE)
+        self.metrics.validateTime = t.elapsed_time
 
     def translate(self):
         """
         Translates the input message to a different, supported format.
         """
-        start = perf_counter_ms()
-        # TODO: translate implementation
-        end = perf_counter_ms()
-        elapsed_time = end - start
-        self.metrics.translateTime = elapsed_time
-        self.operations.append(EdiOperations.TRANSLATE)
+        with Timer() as t:
+            # TODO: validation implementation
+            self.operations.append(EdiOperations.TRANSLATE)
+        self.metrics.translateTime = t.elapsed_time
 
     def _create_edi_result(self) -> EdiResult:
         """

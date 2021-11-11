@@ -49,6 +49,15 @@ def load_xml(message: str):
     return xml_message
 
 
-def perf_counter_ms():
-    """Returns a millisecond performance counter"""
-    return time.perf_counter() * 1_000
+class Timer:
+    """
+    Context manager which mesasures elapsed time
+    """
+
+    def __enter__(self):
+        self.start = time.perf_counter() * 1_000
+        return self
+
+    def __exit__(self, *args):
+        self.end = time.perf_counter() * 1_000
+        self.elapsed_time = self.end - self.start
