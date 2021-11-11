@@ -3,7 +3,7 @@ analysis.py
 
 Classes and functions used to parse and process EDI message metadata.
 """
-from .models import EdiMessageMetadata, EdiMessageType, BaseMessageType
+from .models import EdiMessageMetadata, EdiMessageFormat, BaseMessageFormat
 from .support import load_json, load_xml, create_checksum
 from lxml.etree import _Element
 from typing import Optional
@@ -23,8 +23,8 @@ class EdiAnalyzer:
             raise ValueError("Input message is empty, blank, or None")
 
         self.input_message: str = input_message
-        self.base_message_type: BaseMessageType = self._parse_base_message_type()
-        self.message_type: EdiMessageType = self._parse_message_type()
+        self.base_message_format: BaseMessageFormat = self._parse_base_message_format()
+        self.message_format: EdiMessageFormat = self._parse_message_format()
 
     def _is_hl7(self) -> bool:
         """
@@ -53,31 +53,31 @@ class EdiAnalyzer:
         else:
             return False
 
-    def _parse_message_type(self) -> EdiMessageType:
+    def _parse_message_format(self) -> EdiMessageFormat:
         """
         Returns the associated message's EDI Message Type
         Raises a ValueError if the format cannot be determined
         """
         if self._is_hl7():
-            return EdiMessageType.HL7
+            return EdiMessageFormat.HL7
         elif self._is_x12():
-            return EdiMessageType.X12
+            return EdiMessageFormat.X12
         elif self._is_fhir():
-            return EdiMessageType.FHIR
+            return EdiMessageFormat.FHIR
         else:
             raise ValueError("Unable to determine EDI format")
 
-    def _parse_base_message_type(self) -> BaseMessageType:
+    def _parse_base_message_format(self) -> BaseMessageFormat:
         """
-        Returns the associated message's base message type
+        Returns the associated message's base message format
         """
         first_char = self.input_message.lstrip()[0:1]
         if first_char in ("{", "["):
-            return BaseMessageType.JSON
+            return BaseMessageFormat.JSON
         elif first_char == "<":
-            return BaseMessageType.XML
+            return BaseMessageFormat.XML
         else:
-            return BaseMessageType.TEXT
+            return BaseMessageFormat.TEXT
 
     def _analyze_fhir_json_data(self) -> dict:
         """
@@ -187,26 +187,26 @@ class EdiAnalyzer:
         Returns EdiMessageMetadata for the associated message
         """
         metadata_fields = {
-            "baseMessageType": self.base_message_type.value,
-            "messageType": self.message_type.value,
+            "baseMessageFormat": self.base_message_format.value,
+            "messageFormat": self.message_format.value,
             "messageSize": len(bytes(self.input_message.encode("utf-8"))),
             "checksum": create_checksum(self.input_message),
         }
 
         additional_fields = {}
-        if self.message_type == EdiMessageType.HL7:
+        if self.message_format == EdiMessageFormat.HL7:
             additional_fields = self._analyze_hl7_data()
         elif (
-            self.message_type == EdiMessageType.FHIR
-            and self.base_message_type == BaseMessageType.JSON
+                self.message_format == EdiMessageFormat.FHIR
+                and self.base_message_format == BaseMessageFormat.JSON
         ):
             additional_fields = self._analyze_fhir_json_data()
         elif (
-            self.message_type == EdiMessageType.FHIR
-            and self.base_message_type == BaseMessageType.XML
+                self.message_format == EdiMessageFormat.FHIR
+                and self.base_message_format == BaseMessageFormat.XML
         ):
             additional_fields = self._analyze_fhir_xml_data()
-        elif self.message_type == EdiMessageType.X12:
+        elif self.message_format == EdiMessageFormat.X12:
             additional_fields = self._analyze_x12_data()
 
         metadata_fields.update(additional_fields)

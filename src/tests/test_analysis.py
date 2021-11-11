@@ -5,7 +5,7 @@ Unit tests for EdiAnalyzer
 """
 from edi.models import EdiMessageMetadata
 from edi.analysis import EdiAnalyzer
-from edi.models import EdiMessageType, BaseMessageType
+from edi.models import EdiMessageFormat, BaseMessageFormat
 import pytest
 
 
@@ -21,24 +21,24 @@ def test_init_value_error(input_data):
 @pytest.mark.parametrize(
     "fixture_name, base_message_type, message_type",
     [
-        ("hl7_message", BaseMessageType.TEXT, EdiMessageType.HL7),
-        ("x12_message", BaseMessageType.TEXT, EdiMessageType.X12),
-        ("fhir_json_message", BaseMessageType.JSON, EdiMessageType.FHIR),
-        ("fhir_xml_message", BaseMessageType.XML, EdiMessageType.FHIR),
+        ("hl7_message", BaseMessageFormat.TEXT, EdiMessageFormat.HL7),
+        ("x12_message", BaseMessageFormat.TEXT, EdiMessageFormat.X12),
+        ("fhir_json_message", BaseMessageFormat.JSON, EdiMessageFormat.FHIR),
+        ("fhir_xml_message", BaseMessageFormat.XML, EdiMessageFormat.FHIR),
     ],
 )
 def test_init(fixture_name, base_message_type, message_type, request):
     message_fixture = request.getfixturevalue(fixture_name)
     analyzer = EdiAnalyzer(message_fixture)
     assert analyzer.input_message == message_fixture
-    assert analyzer.base_message_type == base_message_type
-    assert analyzer.message_type == message_type
+    assert analyzer.base_message_format == base_message_type
+    assert analyzer.message_format == message_type
 
 
 def test_analyze_hl7(hl7_message):
     expected_data = {
-        "baseMessageType": "TEXT",
-        "messageType": "HL7",
+        "baseMessageFormat": "TEXT",
+        "messageFormat": "HL7",
         "specificationVersion": "2.6",
         "checksum": "dce92fa2bb05ba55f975dcef9e9615d45e33981c36d46895f349886a87364d60",
         "messageSize": 884,
@@ -53,8 +53,8 @@ def test_analyze_hl7(hl7_message):
 
 def test_analyze_x12(x12_message):
     expected_data = {
-        "baseMessageType": "TEXT",
-        "messageType": "X12",
+        "baseMessageFormat": "TEXT",
+        "messageFormat": "X12",
         "specificationVersion": "005010X279A1",
         "checksum": "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",
         "messageSize": 509,
@@ -69,8 +69,8 @@ def test_analyze_x12(x12_message):
 
 def test_analyze_fhir_xml(fhir_xml_message):
     expected_data = {
-        "baseMessageType": "XML",
-        "messageType": "FHIR",
+        "baseMessageFormat": "XML",
+        "messageFormat": "FHIR",
         "specificationVersion": "http://hl7.org/fhir",
         "implementationVersions": [
             "http://hl7.org/fhir/us/someprofile",
@@ -90,8 +90,8 @@ def test_analyze_fhir_xml(fhir_xml_message):
 
 def test_analyze_fhir_json(fhir_json_message):
     expected_data = {
-        "baseMessageType": "JSON",
-        "messageType": "FHIR",
+        "baseMessageFormat": "JSON",
+        "messageFormat": "FHIR",
         "specificationVersion": "http://hl7.org/fhir",
         "implementationVersions": [
             "http://hl7.org/fhir/us/someprofile",

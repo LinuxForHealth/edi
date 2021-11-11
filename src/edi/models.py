@@ -8,9 +8,9 @@ from enum import Enum
 from typing import List, Optional
 
 
-class BaseMessageType(str, Enum):
+class BaseMessageFormat(str, Enum):
     """
-    The base message type used for an EDI message
+    The base message format used for an EDI message
     """
 
     JSON = "JSON"
@@ -18,9 +18,9 @@ class BaseMessageType(str, Enum):
     XML = "XML"
 
 
-class EdiMessageType(str, Enum):
+class EdiMessageFormat(str, Enum):
     """
-    Supported EDI Message Types
+    Supported EDI Message Formats
     """
 
     CCDA = "C-CDA"
@@ -49,8 +49,8 @@ class EdiMessageMetadata(BaseModel):
     EDI message metadata including the message type, version, record count, etc.
     """
 
-    baseMessageType: BaseMessageType
-    messageType: EdiMessageType
+    baseMessageFormat: BaseMessageFormat
+    messageFormat: EdiMessageFormat
     specificationVersion: str
     implementationVersions: List[str] = None
     messageSize: int
@@ -60,8 +60,8 @@ class EdiMessageMetadata(BaseModel):
     class Config:
         schema_extra = {
             "example": {
-                "baseMessageType": "TEXT",
-                "messageType": "X12",
+                "baseMessageFormat": "TEXT",
+                "messageFormat": "X12",
                 "specificationVersion": "005010X279A1",
                 "implementationVersions": ["Supplemental Payer Guide"],
                 "messageSize": 509,
@@ -115,8 +115,8 @@ class EdiResult(BaseModel):
         schema_extra = {
             "example": {
                 "metadata": {
-                    "baseMessageType": "TEXT",
-                    "messageType": "HL7",
+                    "baseMessageFormat": "TEXT",
+                    "messageFormat": "HL7",
                     "specificationVersion": "2.6",
                     "messageSize": 509,
                     "recordCount": 17,

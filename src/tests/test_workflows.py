@@ -4,8 +4,8 @@ test_workflows.py
 Tests the EdiProcessor workflow implementation
 """
 from edi.models import (
-    BaseMessageType,
-    EdiMessageType,
+    BaseMessageFormat,
+    EdiMessageFormat,
     EdiProcessingMetrics,
     EdiOperations,
 )
@@ -159,11 +159,11 @@ def test_workflow_analyze_hl7(hl7_message):
     edi.analyze()
 
     expected_meta_data = {
-        "baseMessageType": BaseMessageType.TEXT,
+        "baseMessageFormat": BaseMessageFormat.TEXT,
         "checksum": "dce92fa2bb05ba55f975dcef9e9615d45e33981c36d46895f349886a87364d60",
         "implementationVersions": None,
         "messageSize": 884,
-        "messageType": EdiMessageType.HL7,
+        "messageFormat": EdiMessageFormat.HL7,
         "recordCount": 8,
         "specificationVersion": "2.6",
     }
@@ -179,11 +179,11 @@ def test_workflow_analyze_x12(x12_message):
     edi.analyze()
 
     expected_meta_data = {
-        "baseMessageType": BaseMessageType.TEXT,
+        "baseMessageFormat": BaseMessageFormat.TEXT,
         "checksum": "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",
         "implementationVersions": None,
         "messageSize": 509,
-        "messageType": EdiMessageType.X12,
+        "messageFormat": EdiMessageFormat.X12,
         "recordCount": 17,
         "specificationVersion": "005010X279A1",
     }
@@ -199,14 +199,14 @@ def test_workflow_analyze_fhir_json(fhir_json_message):
     edi.analyze()
 
     expected_meta_data = {
-        "baseMessageType": BaseMessageType.JSON,
+        "baseMessageFormat": BaseMessageFormat.JSON,
         "checksum": "abdfddcc98c5b57df07e778d2235d391ef5781f067eb84a8bd7413ca8b566002",
         "implementationVersions": [
             "http://hl7.org/fhir/us/someprofile",
             "http://hl7.org/fhir/us/otherprofile",
         ],
         "messageSize": 309,
-        "messageType": EdiMessageType.FHIR,
+        "messageFormat": EdiMessageFormat.FHIR,
         "recordCount": 1,
         "specificationVersion": "http://hl7.org/fhir",
     }
@@ -222,14 +222,14 @@ def test_workflow_analyze_fhir_xml(fhir_xml_message):
     edi.analyze()
 
     expected_meta_data = {
-        "baseMessageType": BaseMessageType.XML,
+        "baseMessageFormat": BaseMessageFormat.XML,
         "checksum": "c3331c97605865490503e779a697bdeeab5991517ce0655566e23e951b057dfe",
         "implementationVersions": [
             "http://hl7.org/fhir/us/someprofile",
             "http://hl7.org/fhir/us/otherprofile",
         ],
         "messageSize": 607,
-        "messageType": EdiMessageType.FHIR,
+        "messageFormat": EdiMessageFormat.FHIR,
         "recordCount": 1,
         "specificationVersion": "http://hl7.org/fhir",
     }
