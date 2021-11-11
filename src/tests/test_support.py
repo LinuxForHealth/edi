@@ -4,11 +4,11 @@ test_support.py
 Tests EDI support functions.
 """
 from edi.models import EdiProcessingMetrics
-from edi.support import create_checksum, load_xml, load_json, perf_counter_ms
+from edi.support import create_checksum, load_xml, load_json,Timer
 import pytest
 from lxml.etree import ParseError
 from json import JSONDecodeError
-from edi.support import time
+import time
 
 
 @pytest.fixture
@@ -71,10 +71,7 @@ def test_load_json_failure(fhir_xml_message):
         load_json(fhir_xml_message)
 
 
-def test_perf_counter_ms(monkeypatch):
-    def mock_perf_counter() -> float:
-        return 14.742368161
-
-    with monkeypatch.context() as m:
-        m.setattr(time, "perf_counter", mock_perf_counter)
-        assert perf_counter_ms() == 14742.368161
+def test_timer():
+    with Timer() as t:
+         [x for x in range(1_0000)]
+    assert t.elapsed_time >= 0
