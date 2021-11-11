@@ -10,6 +10,7 @@ from edi.models import (
     EdiOperations,
 )
 from edi.workflows import EdiWorkflow
+import pytest
 
 
 def test_linear_workflow_progression(hl7_message):
@@ -219,22 +220,5 @@ def test_workflow_analyze_fhir_json(fhir_json_message):
 
 def test_workflow_analyze_fhir_xml(fhir_xml_message):
     edi = EdiWorkflow(fhir_xml_message)
-    edi.analyze()
-
-    expected_meta_data = {
-        "baseMessageFormat": BaseMessageFormat.XML,
-        "checksum": "c3331c97605865490503e779a697bdeeab5991517ce0655566e23e951b057dfe",
-        "implementationVersions": [
-            "http://hl7.org/fhir/us/someprofile",
-            "http://hl7.org/fhir/us/otherprofile",
-        ],
-        "messageSize": 607,
-        "messageFormat": EdiMessageFormat.FHIR,
-        "recordCount": 1,
-        "specificationVersion": "http://hl7.org/fhir",
-    }
-    assert edi.meta_data.dict() == expected_meta_data
-
-    assert edi.current_state == EdiOperations.ANALYZE
-    assert edi.operations == [EdiOperations.ANALYZE]
-    assert edi.metrics.analyzeTime > 0.0
+    with pytest.raises(NotImplementedError):
+        edi.analyze()

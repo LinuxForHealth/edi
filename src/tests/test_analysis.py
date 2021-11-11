@@ -82,11 +82,8 @@ def test_analyze_fhir_xml(fhir_xml_message):
     }
 
     analyzer = EdiAnalyzer(fhir_xml_message)
-    actual_metadata = analyzer.analyze()
-
-    expected_metadata = EdiMessageMetadata(**expected_data)
-    assert actual_metadata.dict() == expected_metadata.dict()
-
+    with pytest.raises(NotImplementedError):
+        analyzer.analyze()
 
 def test_analyze_fhir_json(fhir_json_message):
     expected_data = {

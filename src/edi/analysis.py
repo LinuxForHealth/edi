@@ -186,6 +186,8 @@ class EdiAnalyzer:
     def analyze(self) -> EdiMessageMetadata:
         """
         Returns EdiMessageMetadata for the associated message
+        :raises NotImplementedError: If the format support is not implemented (FHIR XML).
+        :raises ValueError: If the message format cannot be determined.
         """
         self.base_message_format = self._parse_base_message_format()
         self.message_format = self._parse_message_format()
@@ -201,19 +203,19 @@ class EdiAnalyzer:
         if self.message_format == EdiMessageFormat.HL7:
             additional_fields = self._analyze_hl7_data()
         elif (
-                self.message_format == EdiMessageFormat.FHIR
-                and self.base_message_format == BaseMessageFormat.JSON
+            self.message_format == EdiMessageFormat.FHIR
+            and self.base_message_format == BaseMessageFormat.JSON
         ):
             additional_fields = self._analyze_fhir_json_data()
-        elif (
-                self.message_format == EdiMessageFormat.FHIR
-                and self.base_message_format == BaseMessageFormat.XML
-        ):
-            additional_fields = self._analyze_fhir_xml_data()
         elif self.message_format == EdiMessageFormat.X12:
             additional_fields = self._analyze_x12_data()
+        elif (
+            self.message_format == EdiMessageFormat.FHIR
+            and self.base_message_format == BaseMessageFormat.XML
+        ):
+            raise NotImplementedError("FHIR XML support is not implemented")
         else:
-            raise ValueError("Unsupported format")
+            raise ValueError("Unknown message format")
 
         metadata_fields.update(additional_fields)
         message_metadata = EdiMessageMetadata(**metadata_fields)
