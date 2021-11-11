@@ -4,7 +4,7 @@ test_support.py
 Tests EDI support functions.
 """
 from edi.models import EdiProcessingMetrics
-from edi.support import create_checksum, load_xml, load_json,Timer
+from edi.support import create_checksum, load_xml, load_json, Timer
 import pytest
 from lxml.etree import ParseError
 from json import JSONDecodeError
@@ -73,5 +73,5 @@ def test_load_json_failure(fhir_xml_message):
 
 def test_timer():
     with Timer() as t:
-         [x for x in range(1_0000)]
+        [x for x in range(1_0000)]
     assert t.elapsed_time >= 0

@@ -53,6 +53,7 @@ class Timer:
     """
     Context manager which mesasures elapsed time
     """
+
     def __enter__(self):
         self.start = time.perf_counter() * 1_000
         return self

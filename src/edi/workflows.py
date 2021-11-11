@@ -75,7 +75,7 @@ class EdiWorkflow:
         with Timer() as t:
             # TODO: enrichment implementation
             self.operations.append(EdiOperations.ENRICH)
-        self.metrics.enrichTime =  t.elapsed_time
+        self.metrics.enrichTime = t.elapsed_time
 
     def validate(self):
         """
@@ -84,8 +84,7 @@ class EdiWorkflow:
         with Timer() as t:
             # TODO: validation implementation
             self.operations.append(EdiOperations.VALIDATE)
-        self.metrics.validateTime =  t.elapsed_time
-
+        self.metrics.validateTime = t.elapsed_time
 
     def translate(self):
         """
@@ -94,7 +93,7 @@ class EdiWorkflow:
         with Timer() as t:
             # TODO: validation implementation
             self.operations.append(EdiOperations.TRANSLATE)
-        self.metrics.translateTime =  t.elapsed_time
+        self.metrics.translateTime = t.elapsed_time
 
     def _create_edi_result(self) -> EdiResult:
         """
