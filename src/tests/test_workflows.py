@@ -161,12 +161,12 @@ def test_workflow_analyze_hl7(hl7_message):
 
     expected_meta_data = {
         "baseMessageFormat": BaseMessageFormat.TEXT,
+        "ediMessageFormat": EdiMessageFormat.HL7,
         "checksum": "dce92fa2bb05ba55f975dcef9e9615d45e33981c36d46895f349886a87364d60",
-        "implementationVersions": None,
+        "implementationVersions": ["2.6"],
         "messageSize": 884,
-        "messageFormat": EdiMessageFormat.HL7,
         "recordCount": 8,
-        "specificationVersion": "2.6",
+        "specificationVersion": "v2",
     }
     assert edi.meta_data.dict() == expected_meta_data
 
@@ -181,12 +181,12 @@ def test_workflow_analyze_x12(x12_message):
 
     expected_meta_data = {
         "baseMessageFormat": BaseMessageFormat.TEXT,
+        "ediMessageFormat": EdiMessageFormat.X12,
         "checksum": "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",
-        "implementationVersions": None,
+        "implementationVersions": ["005010X279A1"],
         "messageSize": 509,
-        "messageFormat": EdiMessageFormat.X12,
         "recordCount": 17,
-        "specificationVersion": "005010X279A1",
+        "specificationVersion": "005010",
     }
     assert edi.meta_data.dict() == expected_meta_data
 
@@ -201,15 +201,15 @@ def test_workflow_analyze_fhir_json(fhir_json_message):
 
     expected_meta_data = {
         "baseMessageFormat": BaseMessageFormat.JSON,
+        "ediMessageFormat": EdiMessageFormat.FHIR,
         "checksum": "abdfddcc98c5b57df07e778d2235d391ef5781f067eb84a8bd7413ca8b566002",
         "implementationVersions": [
             "http://hl7.org/fhir/us/someprofile",
             "http://hl7.org/fhir/us/otherprofile",
         ],
         "messageSize": 309,
-        "messageFormat": EdiMessageFormat.FHIR,
         "recordCount": 1,
-        "specificationVersion": "http://hl7.org/fhir",
+        "specificationVersion": "R4",
     }
     assert edi.meta_data.dict() == expected_meta_data
 

@@ -6,7 +6,6 @@ Defines EDI processing workflows.
 
 from typing import Any, Optional
 
-from .analysis import EdiAnalyzer
 from .models import (
     EdiMessageMetadata,
     EdiProcessingMetrics,
@@ -14,6 +13,7 @@ from .models import (
     EdiResult,
 )
 from .support import Timer
+from .analysis import get_analyzer
 import logging
 
 logger = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ class EdiWorkflow:
         Generates EdiMessageMetadata for the input message.
         """
         with Timer() as t:
-            analyzer = EdiAnalyzer(self.input_message)
+            analyzer = get_analyzer(self.input_message)
             self.meta_data = analyzer.analyze()
             self.operations.append(EdiOperations.ANALYZE)
 

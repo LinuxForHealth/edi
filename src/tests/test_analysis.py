@@ -1,112 +1,64 @@
 """
 test_analysis.py
 
-Unit tests for EdiAnalyzer
+General test cases for the analysis package which tests message classification.
+Tests for specific formats are implemented within separate modules named test_<format>_analysis.py.
+For example: test_fhir_analysis.py, test_x12_analysis.py, etc
 """
-from edi.models import EdiMessageMetadata
-from edi.analysis import EdiAnalyzer
-from edi.models import EdiMessageFormat, BaseMessageFormat
 import pytest
+from edi.analysis import get_analyzer, FhirAnalyzer, Hl7Analyzer, X12Analyzer
+from edi.models import BaseMessageFormat, EdiMessageFormat
 
 
 @pytest.mark.parametrize(
-    "input_data",
-    [None, "", "        "],
+    "input_message",
+    [None, "", "        ", "IS"],
 )
-def test_init_value_error(input_data):
+def test_analyze_invalid_message(input_message):
     with pytest.raises(ValueError):
-        EdiAnalyzer(input_message=input_data)
+        get_analyzer(input_message)
 
+def test_analyze_fhir_json(fhir_json_message):
+    analyzer = get_analyzer(fhir_json_message)
+    assert isinstance(analyzer, FhirAnalyzer)
 
-@pytest.mark.parametrize(
-    "fixture_name",
-    [
-        "hl7_message",
-        "x12_message",
-        "fhir_json_message",
-        "fhir_xml_message",
-    ],
-)
-def test_init(fixture_name, request):
-    message_fixture = request.getfixturevalue(fixture_name)
-    analyzer = EdiAnalyzer(message_fixture)
-    assert analyzer.input_message == message_fixture
-    assert analyzer.base_message_format is None
-    assert analyzer.message_format is None
-
-
-def test_analyze_hl7(hl7_message):
-    expected_data = {
-        "baseMessageFormat": "TEXT",
-        "messageFormat": "HL7",
-        "specificationVersion": "2.6",
-        "checksum": "dce92fa2bb05ba55f975dcef9e9615d45e33981c36d46895f349886a87364d60",
-        "messageSize": 884,
-        "recordCount": 8,
-    }
-    analyzer = EdiAnalyzer(hl7_message)
-    actual_metadata = analyzer.analyze()
-
-    expected_metadata = EdiMessageMetadata(**expected_data)
-    assert actual_metadata.dict() == expected_metadata.dict()
-
-
-def test_analyze_x12(x12_message):
-    expected_data = {
-        "baseMessageFormat": "TEXT",
-        "messageFormat": "X12",
-        "specificationVersion": "005010X279A1",
-        "checksum": "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",
-        "messageSize": 509,
-        "recordCount": 17,
-    }
-    analyzer = EdiAnalyzer(x12_message)
-    actual_metadata = analyzer.analyze()
-
-    expected_metadata = EdiMessageMetadata(**expected_data)
-    assert actual_metadata.dict() == expected_metadata.dict()
+    edi_message_metadata = analyzer.analyze()
+    assert edi_message_metadata.baseMessageFormat == BaseMessageFormat.JSON
+    assert edi_message_metadata.ediMessageFormat == EdiMessageFormat.FHIR
+    assert edi_message_metadata.specificationVersion == "R4"
+    assert edi_message_metadata.implementationVersions == ["http://hl7.org/fhir/us/someprofile", "http://hl7.org/fhir/us/otherprofile"]
+    assert edi_message_metadata.messageSize == 309
+    assert edi_message_metadata.recordCount == 1
+    assert edi_message_metadata.checksum == "abdfddcc98c5b57df07e778d2235d391ef5781f067eb84a8bd7413ca8b566002"
 
 
 def test_analyze_fhir_xml(fhir_xml_message):
-    expected_data = {
-        "baseMessageFormat": "XML",
-        "messageFormat": "FHIR",
-        "specificationVersion": "http://hl7.org/fhir",
-        "implementationVersions": [
-            "http://hl7.org/fhir/us/someprofile",
-            "http://hl7.org/fhir/us/otherprofile",
-        ],
-        "checksum": "c3331c97605865490503e779a697bdeeab5991517ce0655566e23e951b057dfe",
-        "messageSize": 607,
-        "recordCount": 1,
-    }
-
-    analyzer = EdiAnalyzer(fhir_xml_message)
     with pytest.raises(NotImplementedError):
-        analyzer.analyze()
+        get_analyzer(fhir_xml_message)
 
-def test_analyze_fhir_json(fhir_json_message):
-    expected_data = {
-        "baseMessageFormat": "JSON",
-        "messageFormat": "FHIR",
-        "specificationVersion": "http://hl7.org/fhir",
-        "implementationVersions": [
-            "http://hl7.org/fhir/us/someprofile",
-            "http://hl7.org/fhir/us/otherprofile",
-        ],
-        "checksum": "abdfddcc98c5b57df07e778d2235d391ef5781f067eb84a8bd7413ca8b566002",
-        "messageSize": 309,
-        "recordCount": 1,
-    }
+def test_analyze_hl7(hl7_message):
+    analyzer = get_analyzer(hl7_message)
+    assert isinstance(analyzer, Hl7Analyzer)
 
-    analyzer = EdiAnalyzer(fhir_json_message)
-    actual_metadata = analyzer.analyze()
-
-    expected_metadata = EdiMessageMetadata(**expected_data)
-    assert actual_metadata.dict() == expected_metadata.dict()
+    edi_message_metadata = analyzer.analyze()
+    assert edi_message_metadata.baseMessageFormat == BaseMessageFormat.TEXT
+    assert edi_message_metadata.ediMessageFormat == EdiMessageFormat.HL7
+    assert edi_message_metadata.specificationVersion == "v2"
+    assert edi_message_metadata.implementationVersions == ["2.6"]
+    assert edi_message_metadata.messageSize == 884
+    assert edi_message_metadata.recordCount == 8
+    assert edi_message_metadata.checksum == "dce92fa2bb05ba55f975dcef9e9615d45e33981c36d46895f349886a87364d60"
 
 
-def test_analyze_unsupported_format():
-    with pytest.raises(ValueError):
-        analyzer = EdiAnalyzer("John,Doe,1400 Anyhoo Lane,Spartanburg,SC,29302")
-        analyzer.analyze()
+def test_analyze_x12(x12_message):
+    analyzer = get_analyzer(x12_message)
+    assert isinstance(analyzer, X12Analyzer)
+
+    edi_message_metadata = analyzer.analyze()
+    assert edi_message_metadata.baseMessageFormat == BaseMessageFormat.TEXT
+    assert edi_message_metadata.ediMessageFormat == EdiMessageFormat.X12
+    assert edi_message_metadata.specificationVersion == "005010"
+    assert edi_message_metadata.implementationVersions == ["005010X279A1"]
+    assert edi_message_metadata.messageSize == 509
+    assert edi_message_metadata.recordCount == 17
+    assert edi_message_metadata.checksum == "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409"

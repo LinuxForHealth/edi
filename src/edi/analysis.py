@@ -1,114 +1,161 @@
 """
 analysis.py
 
-Classes and functions used to parse and process EDI message metadata.
+Classes and functions used to generate EDI message metadata.
+
+Analyers are generated using the factory function `get_analyzer`.
+
+analyzer = get_analyzer(input_message)
+edi_message_metadata = analyzer.analyze()
 """
+import abc
+from enum import Enum
+import json
+from typing import Optional, Type, Dict
+import logging
+
 from .models import EdiMessageMetadata, EdiMessageFormat, BaseMessageFormat
 from .support import load_json, load_xml, create_checksum
+
 from lxml.etree import _Element
-from typing import Optional
+from fhir.resources import construct_fhir_element as construct_fhir_r4
+from fhir.resources.DSTU2 import construct_fhir_element as construct_fhir_dstu2
+from fhir.resources.STU3 import construct_fhir_element as construct_fhir_stu3
+
+logger = logging.getLogger(__name__)
+
+# the minimum message size required for analysis and classification
+MESSAGE_SAMPLE_SIZE: int = 3
 
 
-class EdiAnalyzer:
+class EdiAnalyzer(metaclass=abc.ABCMeta):
     """
-    Generates EdiMessageMetadata from an EDI Message.
+    Abstract base class for Edi Message Analysis.
+
+    EdiAnalysis analyzes an input messages and determines:
+    * the base message format (JSON, CSV, XML, etc)
+    * edi message format (X12, FHIR, HL, etc)
+    * message size
+    * checksum
+
+    Subclasses implement `analyze_message_data` to provide additional fields:
+    * implementation version
+    * specification version
+    * record count
     """
 
-    def __init__(self, input_message: str):
+    def __init__(
+        self,
+        input_message: str,
+        base_message_format: BaseMessageFormat,
+        edi_message_format: EdiMessageFormat,
+    ):
+        """"
+        :param input_message: The input EDI message
+        :param base_message_format: The base message format (TEXT, JSON, XML, etc)
+        :param edi_message_format: The edi message format (FHIR, XML, HL7, etc)
         """
-        Validates the input message
-        :param input_message: The input message to be analyzed.
-        """
+        self.input_message = input_message
+        self.base_message_format = base_message_format
+        self.edi_message_format = edi_message_format
 
-        if not input_message or input_message.isspace():
-            raise ValueError("Input message is empty, blank, or None")
+    def analyze(self) -> EdiMessageMetadata:
+        """
+        Returns EdiMessageMetadata for the associated message
+        """
+        metadata_fields = {
+            "baseMessageFormat": self.base_message_format.value,
+            "ediMessageFormat": self.edi_message_format.value,
+            "messageSize": len(bytes(self.input_message.encode("utf-8"))),
+            "checksum": create_checksum(self.input_message),
+        }
 
-        self.input_message: str = input_message
-        self.base_message_format = None
-        self.message_format = None
+        additional_fields = self.analyze_message_data()
+        metadata_fields.update(additional_fields)
+        message_metadata = EdiMessageMetadata(**metadata_fields)
+        return message_metadata
 
-    def _is_hl7(self) -> bool:
+    @abc.abstractmethod
+    def analyze_message_data(self) -> Dict:
         """
-        Returns True if the associated message is a HL7 message
+        Parses the EDI message to provide edi format specific fields: such as specificationVersion and
+        * implementationVersions
+        * specificationVersion
+        * recordCount
         """
-        return self.input_message[0:3] == "MSH"
+        return
 
-    def _is_x12(self) -> bool:
-        """
-        Returns True if the associated message is a X12 message
-        """
-        return self.input_message[0:3] == "ISA"
 
-    def _is_fhir(self) -> bool:
-        """
-        Returns True if the associated message is a FHIR message
-        """
-        edi_first_char = self.input_message.lstrip()[0:1]
+class FhirAnalyzer(EdiAnalyzer):
+    """
 
-        if edi_first_char == "{":
-            edi_json = load_json(self.input_message)
-            return bool(edi_json.get("resourceType"))
-        elif edi_first_char == "<":
-            edi_xml = load_xml(self.input_message)
-            return "http://hl7.org/fhir" in edi_xml.tag.lower()
-        else:
-            return False
+    EdiAnalysis FHIR Implementation
+    Currently only FHIR JSON is supported. FHIR XML support is included as a "starting point" for if/when FHIR XML
+    is supported.
+    """
+    class FhirSpecificationVersion(str, Enum):
+        R4 = "R4"
+        STU3 = "STU3"
+        DSTU2 = "DSTU2"
 
-    def _parse_message_format(self) -> EdiMessageFormat:
-        """
-        Returns the associated message's EDI Message Type
-        Raises a ValueError if the format cannot be determined
-        """
-        if self._is_hl7():
-            return EdiMessageFormat.HL7
-        elif self._is_x12():
-            return EdiMessageFormat.X12
-        elif self._is_fhir():
-            return EdiMessageFormat.FHIR
-        else:
-            raise ValueError("Unable to determine EDI format")
+    # maps FHIR factory functions to a specification version
+    version_map = {
+        construct_fhir_r4: FhirSpecificationVersion.R4,
+        construct_fhir_stu3: FhirSpecificationVersion.STU3,
+        construct_fhir_dstu2: FhirSpecificationVersion.DSTU2
+    }
 
-    def _parse_base_message_format(self) -> BaseMessageFormat:
+    def _parse_json_specification_version(self, fhir_json: Dict) -> str:
         """
-        Returns the associated message's base message format
+        Parses the input message using multiple passes to determine the FHIR specification version.
+        :param fhir_json: The FHIR JSON resource
+        :return: The specification version
         """
-        first_char = self.input_message.lstrip()[0:1]
-        if first_char in ("{", "["):
-            return BaseMessageFormat.JSON
-        elif first_char == "<":
-            return BaseMessageFormat.XML
-        else:
-            return BaseMessageFormat.TEXT
+        resourceType = fhir_json.get("resourceType")
+        specification_version = None
 
-    def _analyze_fhir_json_data(self) -> dict:
+        for c in (construct_fhir_r4, construct_fhir_stu3, construct_fhir_dstu2):
+            try:
+                fhir_resource = c(resourceType, fhir_json)
+                if fhir_resource:
+                    specification_version = FhirAnalyzer.version_map[c]
+                    break
+            except Exception as ex:
+                logger.debug(f"FHIR Resource is not compatible with {c.__name__}")
+
+        if not specification_version:
+            raise ValueError("Resource is not compatible with FHIR R4, STU3, DSTU2")
+
+        return specification_version
+
+
+    def _analyze_fhir_json_data(self) -> Dict:
         """
         Parses additional data from a FHIR JSON message for the EDI Analysis.
         Sets the following fields:
         - specificationVersion
-        - implementationVersion
+        - implementationVersions
         - recordCount
         :returns: dictionary
         """
-        data = {"recordCount": 1, "specificationVersion": "http://hl7.org/fhir"}
-
         fhir_json = load_json(self.input_message)
-        data["implementationVersions"] = profiles = fhir_json.get("meta", {}).get(
-            "profile", []
-        )
+
+        data = {
+            "specificationVersion": self._parse_json_specification_version(fhir_json),
+            "implementationVersions":  fhir_json.get("meta", {}).get("profile", [])
+        }
 
         if fhir_json.get("resourceType", "").lower() == "bundle":
             record_count = len(fhir_json.get("entry", []))
             data["recordCount"] = record_count
+        else:
+            data["recordCount"] = 1
 
         return data
 
-    def _analyze_fhir_xml_data(self) -> dict:
+    def _analyze_fhir_xml_data(self) -> Dict:
         """
-        Parses additional data from a FHIR XML message for the EDI Analysis.
-        Sets the following fields:
-        - specificationVersion
-        - implementationVersion
-        - recordCount
+        An initial implementation for when FHIR XML is supported.
         :returns: dictionary
         """
 
@@ -141,82 +188,153 @@ class EdiAnalyzer:
 
         return data
 
-    def _analyze_hl7_data(self) -> dict:
+    def analyze_message_data(self) -> Dict:
         """
-        Parses additional data from an HL7 message for the EDI Analysis.
+        Analyzes FHIR message to parse edi format specific fields.
+        :raises: NotImplementedError if the FHIR message is XML
+        """
+        if self.base_message_format == BaseMessageFormat.JSON:
+            return self._analyze_fhir_json_data()
+        else:
+            raise NotImplementedError(f"FHIR {self.base_message_format} is not supported")
+
+
+class Hl7Analyzer(EdiAnalyzer):
+    """
+    Provides HL7 message analysis.
+    """
+
+    def analyze_message_data(self) -> Dict:
+        """
+        Parses additional data from a HL7 TEXT message for the EDI Analysis.
         Sets the following fields:
         - specificationVersion
+        - implementationVersions
         - recordCount
         :returns: dictionary
         """
 
         records = self.input_message.split("\r")
-        data = {"recordCount": 0}
+        data = {}
 
         if records or not records[0][3:4]:
             msh_record = records[0]
             delimiter = msh_record[3:4]
 
-            data["specificationVersion"] = msh_record.split(delimiter)[11]
+            implementation_version = msh_record.split(delimiter)[11]
+            data["implementationVersions"] = [implementation_version]
+            data["specificationVersion"] = f"v{implementation_version[0]}"
             data["recordCount"] = len([r for r in records if r])
 
         return data
 
-    def _analyze_x12_data(self) -> dict:
+
+class X12Analyzer(EdiAnalyzer):
+    """
+    Provides X12 message analysis
+    """
+
+    def analyze_message_data(self) -> Dict:
         """
-        Parses additional data from a X12 message for the EDI Analysis.
+        Parses additional data from a X12 TEXT message for the EDI Analysis.
         Sets the following fields:
         - specificationVersion
+        - implementationVersions
         - recordCount
         :returns: dictionary
         """
-
         records = self.input_message.replace("\r", "").replace("\n", "").split("~")
-        data = {"recordCount": 0}
+        data = {}
 
         if records and len(records) >= 2:
             gs_segment = records[1].replace("~", "")
             delimiter = gs_segment[2:3]
 
-            data["specificationVersion"] = gs_segment.split(delimiter)[8]
+            implementation_version = gs_segment.split(delimiter)[8]
+            data["implementationVersions"] = [implementation_version]
+            data["specificationVersion"] = implementation_version[0:implementation_version.find("X")]
             data["recordCount"] = len([r for r in records if r])
 
         return data
 
-    def analyze(self) -> EdiMessageMetadata:
-        """
-        Returns EdiMessageMetadata for the associated message
-        :raises NotImplementedError: If the format support is not implemented (FHIR XML).
-        :raises ValueError: If the message format cannot be determined.
-        """
-        self.base_message_format = self._parse_base_message_format()
-        self.message_format = self._parse_message_format()
+def _get_base_message_format(input_message: str) -> BaseMessageFormat:
+    """returns the base message format (JSON, XML, TEXT, etc) for a message"""
+    base_message_format: Union[BaseMessageFormat, None] = None
+    first_char = input_message.lstrip()[0:1]
 
-        metadata_fields = {
-            "baseMessageFormat": self.base_message_format.value,
-            "messageFormat": self.message_format.value,
-            "messageSize": len(bytes(self.input_message.encode("utf-8"))),
-            "checksum": create_checksum(self.input_message),
-        }
+    if first_char in ("{", "["):
+        base_message_format = BaseMessageFormat.JSON
+    elif first_char == "<":
+        base_message_format = BaseMessageFormat.XML
+    else:
+        base_message_format = BaseMessageFormat.TEXT
+    return base_message_format
 
-        additional_fields = {}
-        if self.message_format == EdiMessageFormat.HL7:
-            additional_fields = self._analyze_hl7_data()
-        elif (
-            self.message_format == EdiMessageFormat.FHIR
-            and self.base_message_format == BaseMessageFormat.JSON
-        ):
-            additional_fields = self._analyze_fhir_json_data()
-        elif self.message_format == EdiMessageFormat.X12:
-            additional_fields = self._analyze_x12_data()
-        elif (
-            self.message_format == EdiMessageFormat.FHIR
-            and self.base_message_format == BaseMessageFormat.XML
-        ):
-            raise NotImplementedError("FHIR XML support is not implemented")
-        else:
-            raise ValueError("Unknown message format")
 
-        metadata_fields.update(additional_fields)
-        message_metadata = EdiMessageMetadata(**metadata_fields)
-        return message_metadata
+def _get_edi_message_format(
+    input_message: str, base_message_format: BaseMessageFormat
+) -> EdiMessageFormat:
+    """
+    Returns the edi message format (HL7, X12, FHIR, etc) for an input message.
+
+    :param input_message: The input message
+    :param base_message_format: The base message format (JSON, XML, etc)
+    :raises: ValueError if the edi message format cannot be determined
+    :raises: NotImplementedError if the edi message format is not supported
+    """
+    edi_message_format: Union[EdiMessageFormat, None] = None
+
+    first_chars = input_message.lstrip()[0:3]
+
+    if base_message_format == BaseMessageFormat.TEXT:
+        if first_chars.upper() == "MSH":
+            edi_message_format = EdiMessageFormat.HL7
+        elif first_chars.upper() == "ISA":
+            edi_message_format = EdiMessageFormat.X12
+    elif base_message_format == BaseMessageFormat.JSON:
+        json_message = json.loads(input_message)
+        if json_message.get("resourceType") is not None:
+            edi_message_format = EdiMessageFormat.FHIR
+    elif base_message_format == BaseMessageFormat.XML:
+        xml_message = load_xml(input_message)
+        if "http://hl7.org/fhir" in xml_message.tag.lower():
+            raise NotImplementedError("FHIR Xml Support Is Not Implemented")
+
+    if edi_message_format is None:
+        raise ValueError("Unable to determine edi message format for input message")
+
+    return edi_message_format
+
+
+def get_analyzer(input_message: str):
+    """
+    Returns an EdiAnalyzer for the given input message
+    :raises: ValueError if the input message cannot be mapped to an analyzer
+    """
+    if (
+        input_message is None
+        or not input_message.strip()
+        or len(input_message) < MESSAGE_SAMPLE_SIZE
+    ):
+        raise ValueError("Invalid input message")
+
+    base_message_format: BaseMessageFormat = _get_base_message_format(input_message)
+    edi_message_format: EdiMessageFormat = _get_edi_message_format(
+        input_message, base_message_format
+    )
+    metadata_fields = {
+        "base_message_format": base_message_format,
+        "edi_message_format": edi_message_format,
+    }
+    analyis_instance: Type[EdiAnalyzer] = None
+
+    if edi_message_format == EdiMessageFormat.FHIR:
+        analyis_instance = FhirAnalyzer(input_message, **metadata_fields)
+    elif edi_message_format == EdiMessageFormat.HL7:
+        analyis_instance = Hl7Analyzer(input_message, **metadata_fields)
+    elif edi_message_format == EdiMessageFormat.X12:
+        analyis_instance = X12Analyzer(input_message, **metadata_fields)
+    else:
+        raise ValueError("Unable to load analyzer for input message")
+
+    return analyis_instance
