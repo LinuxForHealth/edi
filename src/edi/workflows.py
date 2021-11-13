@@ -11,8 +11,9 @@ from .models import (
     EdiProcessingMetrics,
     EdiOperations,
     EdiResult,
+    EdiMessageFormat
 )
-from .support import Timer
+from .support import Timer, load_fhir_json, load_hl7, load_x12
 from .analysis import get_analyzer
 import logging
 
@@ -40,12 +41,14 @@ class EdiWorkflow:
         Configures the EdiProcess instance.
         Attributes include:
         - input_message: cached source message
+        - data_model: edi domain model (FHIR, HL7, X12, etc)
         - meta_data: EdiMessageMetadata object
         - metrics: EdiProcessingMetrics object
         - operations: List of EdiOperations completed for this instance
         """
 
         self.input_message = input_message
+        self.data_model = None
         self.meta_data: Optional[EdiMessageMetadata] = None
         self.metrics: EdiProcessingMetrics = EdiProcessingMetrics(
             analyzeTime=0.0, enrichTime=0.0, validateTime=0.0, translateTime=0.0
@@ -79,10 +82,21 @@ class EdiWorkflow:
 
     def validate(self):
         """
-        Validates the input message.
+        Validates the input message and populates the data_model instance attribute.
         """
         with Timer() as t:
-            # TODO: validation implementation
+            edi_message_format = self.meta_data.ediMessageFormat
+
+            if edi_message_format == EdiMessageFormat.FHIR:
+                self.data_model = load_fhir_json(self.input_message)
+            elif edi_message_format == EdiMessageFormat.HL7:
+                self.data_model = load_hl7(self.input_message)
+            elif edi_message_format == EdiMessageFormat.X12:
+                self.data_model = load_x12(self.input_message)
+
+            if self.data_model is None:
+                raise ValueError("Unable to load model")
+
             self.operations.append(EdiOperations.VALIDATE)
         self.metrics.validateTime = t.elapsed_time
 
@@ -144,8 +158,9 @@ class EdiWorkflow:
     def run(self, enrich=True, validate=True, translate=True):
         """
         Convenience method used to run a workflow process.
-        By default the workflow process includes: analyze, enrich, validate, and translate, and is marked as completed.
-        The method paramee
+        The analyze step is included by default.
+        The reamining steps: enrich, validate, and translate are optional.
+
         :param enrich: Indicates if the enrich step is executed. Defaults to True.
         :param validate: Indicates if the validation step is executed. Defaults to True.
         :param translate: Indicates if the translate step is executed. Defaults to True.
@@ -165,6 +180,6 @@ class EdiWorkflow:
 
             return self.complete()
         except Exception as ex:
-            msg = "An error occurred executing the EdiProcessor workflow"
+            msg = "An error occurred executing the EdiWorkflow"
             logger.exception(msg)
             return self.fail(msg, ex)

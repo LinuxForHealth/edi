@@ -4,7 +4,16 @@ test_support.py
 Tests EDI support functions.
 """
 from edi.models import EdiProcessingMetrics
-from edi.support import create_checksum, load_xml, load_json, Timer
+from edi.support import (
+    create_checksum,
+    load_xml,
+    load_json,
+    Timer,
+    load_fhir_json,
+    load_hl7,
+    load_x12,
+)
+
 import pytest
 from lxml.etree import ParseError
 from json import JSONDecodeError
@@ -69,6 +78,24 @@ def test_load_json(fhir_json_message):
 def test_load_json_failure(fhir_xml_message):
     with pytest.raises(JSONDecodeError):
         load_json(fhir_xml_message)
+
+
+def test_load_fhir_json(fhir_json_message):
+    fhir_model = load_fhir_json(fhir_json_message)
+    assert fhir_model is not None
+    assert fhir_model.resource_type == "Patient"
+
+
+def test_load_hl7(hl7_message):
+    hl7_model = load_hl7(hl7_message)
+    assert hl7_model is not None
+    assert len(hl7_model) == 8
+
+
+def test_load_x12(x12_message):
+    x12_models = load_x12(x12_message)
+    len(x12_models) == 1
+    assert x12_models[0].header.st_segment.transaction_set_identifier_code == "270"
 
 
 def test_timer():

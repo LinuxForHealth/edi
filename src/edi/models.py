@@ -43,9 +43,11 @@ class EdiOperations(str, Enum):
     CANCEL = "CANCEL"
     FAIL = "FAIL"
 
+
 class X12SpecificationVersion(str, Enum):
     v4010 = "004010"
     v5010 = "005010"
+
 
 class EdiMessageMetadata(BaseModel):
     """

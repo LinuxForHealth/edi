@@ -50,7 +50,7 @@ class EdiAnalyzer(metaclass=abc.ABCMeta):
         base_message_format: BaseMessageFormat,
         edi_message_format: EdiMessageFormat,
     ):
-        """"
+        """ "
         :param input_message: The input EDI message
         :param base_message_format: The base message format (TEXT, JSON, XML, etc)
         :param edi_message_format: The edi message format (FHIR, XML, HL7, etc)
@@ -93,6 +93,7 @@ class FhirAnalyzer(EdiAnalyzer):
     Currently only FHIR JSON is supported. FHIR XML support is included as a "starting point" for if/when FHIR XML
     is supported.
     """
+
     class FhirSpecificationVersion(str, Enum):
         R4 = "R4"
         STU3 = "STU3"
@@ -102,7 +103,7 @@ class FhirAnalyzer(EdiAnalyzer):
     version_map = {
         construct_fhir_r4: FhirSpecificationVersion.R4,
         construct_fhir_stu3: FhirSpecificationVersion.STU3,
-        construct_fhir_dstu2: FhirSpecificationVersion.DSTU2
+        construct_fhir_dstu2: FhirSpecificationVersion.DSTU2,
     }
 
     def _parse_json_specification_version(self, fhir_json: Dict) -> str:
@@ -128,7 +129,6 @@ class FhirAnalyzer(EdiAnalyzer):
 
         return specification_version
 
-
     def _analyze_fhir_json_data(self) -> Dict:
         """
         Parses additional data from a FHIR JSON message for the EDI Analysis.
@@ -142,7 +142,7 @@ class FhirAnalyzer(EdiAnalyzer):
 
         data = {
             "specificationVersion": self._parse_json_specification_version(fhir_json),
-            "implementationVersions":  fhir_json.get("meta", {}).get("profile", [])
+            "implementationVersions": fhir_json.get("meta", {}).get("profile", []),
         }
 
         if fhir_json.get("resourceType", "").lower() == "bundle":
@@ -196,7 +196,9 @@ class FhirAnalyzer(EdiAnalyzer):
         if self.base_message_format == BaseMessageFormat.JSON:
             return self._analyze_fhir_json_data()
         else:
-            raise NotImplementedError(f"FHIR {self.base_message_format} is not supported")
+            raise NotImplementedError(
+                f"FHIR {self.base_message_format} is not supported"
+            )
 
 
 class Hl7Analyzer(EdiAnalyzer):
@@ -252,10 +254,13 @@ class X12Analyzer(EdiAnalyzer):
 
             implementation_version = gs_segment.split(delimiter)[8]
             data["implementationVersions"] = [implementation_version]
-            data["specificationVersion"] = implementation_version[0:implementation_version.find("X")]
+            data["specificationVersion"] = implementation_version[
+                0 : implementation_version.find("X")
+            ]
             data["recordCount"] = len([r for r in records if r])
 
         return data
+
 
 def _get_base_message_format(input_message: str) -> BaseMessageFormat:
     """returns the base message format (JSON, XML, TEXT, etc) for a message"""

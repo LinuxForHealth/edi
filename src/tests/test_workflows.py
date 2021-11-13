@@ -27,7 +27,8 @@ def test_linear_workflow_progression(hl7_message):
     assert edi.input_message == hl7_message
     assert edi.current_state == EdiOperations.ANALYZE
     assert edi.operations == [EdiOperations.ANALYZE]
-    assert edi.meta_data is not None
+    assert edi.meta_data.ediMessageFormat == "HL7"
+    assert edi.meta_data.baseMessageFormat == "TEXT"
 
     edi.enrich()
     assert edi.current_state == EdiOperations.ENRICH
@@ -40,6 +41,8 @@ def test_linear_workflow_progression(hl7_message):
         EdiOperations.ENRICH,
         EdiOperations.VALIDATE,
     ]
+    assert edi.data_model is not None
+    assert len(edi.data_model) == 8
 
     edi.translate()
     assert edi.current_state == EdiOperations.TRANSLATE
