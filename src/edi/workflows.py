@@ -11,7 +11,7 @@ from .models import (
     EdiProcessingMetrics,
     EdiOperations,
     EdiResult,
-    EdiMessageFormat
+    EdiMessageFormat,
 )
 from .support import Timer, load_fhir_json, load_hl7, load_x12
 from .analysis import get_analyzer
