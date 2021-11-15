@@ -20,6 +20,19 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class EdiWorkflowException(Exception):
+    """
+    Base EdiWorkflow Exceptions
+    """
+    pass
+
+
+class WorkflowNotActive(EdiWorkflowException):
+    """
+    Raised when a workflow step is invoked, but the workflow is not active.
+    """
+    pass
+
 class EdiWorkflow:
     """
     Defines the steps and transitions used in an EDI workflow.
@@ -55,6 +68,10 @@ class EdiWorkflow:
         )
         self.operations: Optional[EdiOperations] = []
 
+    def is_active(self) -> bool:
+        """Returns True if the workflow instance is active"""
+        return self.current_state not in (EdiOperations.COMPLETE, EdiOperations.FAIL)
+
     @property
     def current_state(self) -> EdiOperations:
         """Returns the current operation state"""
@@ -64,50 +81,75 @@ class EdiWorkflow:
         """
         Generates EdiMessageMetadata for the input message.
         """
-        with Timer() as t:
-            analyzer = get_analyzer(self.input_message)
-            self.meta_data = analyzer.analyze()
-            self.operations.append(EdiOperations.ANALYZE)
+        if not self.is_active():
+            raise WorkflowNotActive(f"Unable to analyze. Current workflow state = {self.current_state}")
 
-        self.metrics.analyzeTime = t.elapsed_time
+        try:
+            with Timer() as t:
+                analyzer = get_analyzer(self.input_message)
+                self.meta_data = analyzer.analyze()
+                self.operations.append(EdiOperations.ANALYZE)
+
+            self.metrics.analyzeTime = t.elapsed_time
+        except Exception as ex:
+            self.fail(str(ex), ex)
+
 
     def enrich(self):
         """
         Adds additional data to the input message.
         """
-        with Timer() as t:
-            # TODO: enrichment implementation
-            self.operations.append(EdiOperations.ENRICH)
-        self.metrics.enrichTime = t.elapsed_time
+        if not self.is_active():
+            raise WorkflowNotActive(f"Unable to enrich. Current workflow state = {self.current_state}")
+
+        try:
+            with Timer() as t:
+                # TODO: enrichment implementation
+                self.operations.append(EdiOperations.ENRICH)
+            self.metrics.enrichTime = t.elapsed_time
+        except Exception as ex:
+            self.fail(str(ex), ex)
 
     def validate(self):
         """
         Validates the input message and populates the data_model instance attribute.
         """
-        with Timer() as t:
-            edi_message_format = self.meta_data.ediMessageFormat
+        if not self.is_active():
+            raise WorkflowNotActive(f"Unable to validate. Current workflow state = {self.current_state}")
 
-            if edi_message_format == EdiMessageFormat.FHIR:
-                self.data_model = load_fhir_json(self.input_message)
-            elif edi_message_format == EdiMessageFormat.HL7:
-                self.data_model = load_hl7(self.input_message)
-            elif edi_message_format == EdiMessageFormat.X12:
-                self.data_model = load_x12(self.input_message)
+        try:
+            with Timer() as t:
+                edi_message_format = self.meta_data.ediMessageFormat
 
-            if self.data_model is None:
-                raise ValueError("Unable to load model")
+                if edi_message_format == EdiMessageFormat.FHIR:
+                    self.data_model = load_fhir_json(self.input_message)
+                elif edi_message_format == EdiMessageFormat.HL7:
+                    self.data_model = load_hl7(self.input_message)
+                elif edi_message_format == EdiMessageFormat.X12:
+                    self.data_model = load_x12(self.input_message)
 
-            self.operations.append(EdiOperations.VALIDATE)
-        self.metrics.validateTime = t.elapsed_time
+                if self.data_model is None:
+                    raise ValueError("Unable to load model")
+
+                self.operations.append(EdiOperations.VALIDATE)
+            self.metrics.validateTime = t.elapsed_time
+        except Exception as ex:
+            self.fail(str(ex), ex)
 
     def translate(self):
         """
         Translates the input message to a different, supported format.
         """
-        with Timer() as t:
-            # TODO: validation implementation
-            self.operations.append(EdiOperations.TRANSLATE)
-        self.metrics.translateTime = t.elapsed_time
+        if not self.is_active():
+            raise WorkflowNotActive(f"Unable to translate. Current workflow state = {self.current_state}")
+
+        try:
+            with Timer() as t:
+                # TODO: validation implementation
+                self.operations.append(EdiOperations.TRANSLATE)
+            self.metrics.translateTime = t.elapsed_time
+        except Exception as ex:
+            self.fail(str(ex), ex)
 
     def _create_edi_result(self) -> EdiResult:
         """

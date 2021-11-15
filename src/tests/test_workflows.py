@@ -9,7 +9,7 @@ from edi.models import (
     EdiProcessingMetrics,
     EdiOperations,
 )
-from edi.workflows import EdiWorkflow
+from edi.workflows import EdiWorkflow, WorkflowNotActive
 import pytest
 
 
@@ -85,6 +85,9 @@ def test_workflow_complete(hl7_message):
         EdiOperations.COMPLETE,
     ]
 
+    with pytest.raises(WorkflowNotActive):
+        edi.analyze()
+
 
 def test_workflow_cancel(hl7_message):
     """Validates cancel transition invocation"""
@@ -158,6 +161,31 @@ def test_workflow_run(hl7_message):
     ]
 
 
+def test_workflow_is_active(hl7_message):
+    edi = EdiWorkflow(hl7_message)
+    edi.analyze()
+
+    assert edi.is_active() is True
+
+    edi.fail("foo", ValueError("bar"))
+
+    assert edi.is_active() is False
+    with pytest.raises(WorkflowNotActive):
+        edi.analyze()
+
+    assert edi.is_active() is False
+    with pytest.raises(WorkflowNotActive):
+        edi.enrich()
+
+    assert edi.is_active() is False
+    with pytest.raises(WorkflowNotActive):
+        edi.validate()
+
+    assert edi.is_active() is False
+    with pytest.raises(WorkflowNotActive):
+        edi.translate()
+
+
 def test_workflow_analyze_hl7(hl7_message):
     edi = EdiWorkflow(hl7_message)
     edi.analyze()
@@ -223,5 +251,5 @@ def test_workflow_analyze_fhir_json(fhir_json_message):
 
 def test_workflow_analyze_fhir_xml(fhir_xml_message):
     edi = EdiWorkflow(fhir_xml_message)
-    with pytest.raises(NotImplementedError):
-        edi.analyze()
+    edi.analyze()
+    assert edi.is_active() is False
