@@ -24,6 +24,7 @@ class EdiWorkflowException(Exception):
     """
     Base EdiWorkflow Exceptions
     """
+
     pass
 
 
@@ -31,7 +32,9 @@ class WorkflowNotActive(EdiWorkflowException):
     """
     Raised when a workflow step is invoked, but the workflow is not active.
     """
+
     pass
+
 
 class EdiWorkflow:
     """
@@ -82,7 +85,9 @@ class EdiWorkflow:
         Generates EdiMessageMetadata for the input message.
         """
         if not self.is_active():
-            raise WorkflowNotActive(f"Unable to analyze. Current workflow state = {self.current_state}")
+            raise WorkflowNotActive(
+                f"Unable to analyze. Current workflow state = {self.current_state}"
+            )
 
         try:
             with Timer() as t:
@@ -94,13 +99,14 @@ class EdiWorkflow:
         except Exception as ex:
             self.fail(str(ex), ex)
 
-
     def enrich(self):
         """
         Adds additional data to the input message.
         """
         if not self.is_active():
-            raise WorkflowNotActive(f"Unable to enrich. Current workflow state = {self.current_state}")
+            raise WorkflowNotActive(
+                f"Unable to enrich. Current workflow state = {self.current_state}"
+            )
 
         try:
             with Timer() as t:
@@ -115,7 +121,9 @@ class EdiWorkflow:
         Validates the input message and populates the data_model instance attribute.
         """
         if not self.is_active():
-            raise WorkflowNotActive(f"Unable to validate. Current workflow state = {self.current_state}")
+            raise WorkflowNotActive(
+                f"Unable to validate. Current workflow state = {self.current_state}"
+            )
 
         try:
             with Timer() as t:
@@ -141,7 +149,9 @@ class EdiWorkflow:
         Translates the input message to a different, supported format.
         """
         if not self.is_active():
-            raise WorkflowNotActive(f"Unable to translate. Current workflow state = {self.current_state}")
+            raise WorkflowNotActive(
+                f"Unable to translate. Current workflow state = {self.current_state}"
+            )
 
         try:
             with Timer() as t:
