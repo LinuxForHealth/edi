@@ -3,10 +3,8 @@ analysis.py
 
 Classes and functions used to generate EDI message metadata.
 
-Analyers are generated using the factory function `get_analyzer`.
-
-analyzer = get_analyzer(input_message)
-edi_message_metadata = analyzer.analyze()
+Usage:
+edi_metadata: EdiMessageMetadata = analyze(input_message)
 """
 import abc
 from enum import Enum
@@ -311,10 +309,12 @@ def _get_edi_message_format(
     return edi_message_format
 
 
-def get_analyzer(input_message: str):
+def analyze(input_message: str):
     """
-    Returns an EdiAnalyzer for the given input message
+    Returns an EdiMessageMetadata document for the given input message
+
     :raises: ValueError if the input message cannot be mapped to an analyzer
+    :return: EdiMessageMetadata
     """
     if (
         input_message is None
@@ -342,4 +342,4 @@ def get_analyzer(input_message: str):
     else:
         raise ValueError("Unable to load analyzer for input message")
 
-    return analyis_instance
+    return analyis_instance.analyze()

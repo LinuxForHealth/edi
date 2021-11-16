@@ -6,7 +6,7 @@ Tests for specific formats are implemented within separate modules named test_<f
 For example: test_fhir_analysis.py, test_x12_analysis.py, etc
 """
 import pytest
-from edi.analysis import get_analyzer, FhirAnalyzer, Hl7Analyzer, X12Analyzer
+from edi.analysis import analyze
 from edi.models import BaseMessageFormat, EdiMessageFormat
 
 
@@ -16,14 +16,11 @@ from edi.models import BaseMessageFormat, EdiMessageFormat
 )
 def test_analyze_invalid_message(input_message):
     with pytest.raises(ValueError):
-        get_analyzer(input_message)
+        analyze(input_message)
 
 
 def test_analyze_fhir_json(fhir_json_message):
-    analyzer = get_analyzer(fhir_json_message)
-    assert isinstance(analyzer, FhirAnalyzer)
-
-    edi_message_metadata = analyzer.analyze()
+    edi_message_metadata = analyze(fhir_json_message)
     assert edi_message_metadata.baseMessageFormat == BaseMessageFormat.JSON
     assert edi_message_metadata.ediMessageFormat == EdiMessageFormat.FHIR
     assert edi_message_metadata.specificationVersion == "R4"
@@ -41,14 +38,11 @@ def test_analyze_fhir_json(fhir_json_message):
 
 def test_analyze_fhir_xml(fhir_xml_message):
     with pytest.raises(NotImplementedError):
-        get_analyzer(fhir_xml_message)
+        analyze(fhir_xml_message)
 
 
 def test_analyze_hl7(hl7_message):
-    analyzer = get_analyzer(hl7_message)
-    assert isinstance(analyzer, Hl7Analyzer)
-
-    edi_message_metadata = analyzer.analyze()
+    edi_message_metadata = analyze(hl7_message)
     assert edi_message_metadata.baseMessageFormat == BaseMessageFormat.TEXT
     assert edi_message_metadata.ediMessageFormat == EdiMessageFormat.HL7
     assert edi_message_metadata.specificationVersion == "v2"
@@ -62,10 +56,7 @@ def test_analyze_hl7(hl7_message):
 
 
 def test_analyze_x12(x12_message):
-    analyzer = get_analyzer(x12_message)
-    assert isinstance(analyzer, X12Analyzer)
-
-    edi_message_metadata = analyzer.analyze()
+    edi_message_metadata = analyze(x12_message)
     assert edi_message_metadata.baseMessageFormat == BaseMessageFormat.TEXT
     assert edi_message_metadata.ediMessageFormat == EdiMessageFormat.X12
     assert edi_message_metadata.specificationVersion == "005010"

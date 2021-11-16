@@ -14,7 +14,7 @@ from .models import (
     EdiMessageFormat,
 )
 from .support import Timer, load_fhir_json, load_hl7, load_x12
-from .analysis import get_analyzer
+from .analysis import analyze
 import logging
 
 logger = logging.getLogger(__name__)
@@ -91,8 +91,7 @@ class EdiWorkflow:
 
         try:
             with Timer() as t:
-                analyzer = get_analyzer(self.input_message)
-                self.meta_data = analyzer.analyze()
+                self.meta_data = analyze(self.input_message)
                 self.operations.append(EdiOperations.ANALYZE)
 
             self.metrics.analyzeTime = t.elapsed_time
