@@ -30,25 +30,6 @@ class EdiMessageFormat(str, Enum):
     X12 = "X12"
 
 
-class EdiOperations(str, Enum):
-    """
-    Supported EDI Operations
-    """
-
-    ANALYZE = "ANALYZE"
-    ENRICH = "ENRICH"
-    VALIDATE = "VALIDATE"
-    TRANSLATE = "TRANSLATE"
-    COMPLETE = "COMPLETE"
-    CANCEL = "CANCEL"
-    FAIL = "FAIL"
-
-
-class X12SpecificationVersion(str, Enum):
-    v4010 = "004010"
-    v5010 = "005010"
-
-
 class EdiMessageMetadata(BaseModel):
     """
     EDI message metadata including the message type, version, record count, etc.
@@ -114,9 +95,7 @@ class EdiResult(BaseModel):
 
     metadata: Optional[EdiMessageMetadata]
     metrics: Optional[EdiProcessingMetrics]
-    inputMessage: str
-    operations: List[EdiOperations]
-    errors: List[dict] = []
+    errors: List[str] = []
 
     class Config:
         extra = "forbid"
@@ -137,14 +116,6 @@ class EdiResult(BaseModel):
                     "validateTime": 0.013415911,
                     "translateTime": 2.625179046,
                 },
-                "inputMessage": "EDI Message",
-                "operations": [
-                    "ANALYZE",
-                    "ENRICH",
-                    "VALIDATE",
-                    "TRANSLATE",
-                    "COMPLETE",
-                ],
                 "errors": [],
             }
         }
