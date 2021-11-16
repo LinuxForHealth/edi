@@ -77,11 +77,11 @@ EdiResult Output:
         "specificationVersion": "005010"
     },
     "metrics": {
-        "analyzeTime": 0.10429199999998673,
+        "analyzeTime": 0.00016999244689941406,
         "enrichTime": 0.0,
-        "totalTime": 65.85677499999997,
+        "totalTime": 0.06444716453552246,
         "translateTime": 0.0,
-        "validateTime": 65.75248299999998
+        "validateTime": 0.06427717208862305
     }
 }
 ```
@@ -111,9 +111,9 @@ prints the EdiResult
               'messageSize': 494,
               'recordCount': 17,
               'specificationVersion': '005010'},
- 'metrics': {'analyzeTime': 0.2078219999821158,
+ 'metrics': {'analyzeTime': 0.00016999244689941406,
              'enrichTime': 0.0,
-             'totalTime': 93.928545999981,
+             'totalTime': 0.06444716453552246,
              'translateTime': 0.0,
-             'validateTime': 93.72072399999888}}
+             'validateTime': 0.06427717208862305}
 ```

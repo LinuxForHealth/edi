@@ -104,9 +104,9 @@ class Timer:
     """
 
     def __enter__(self):
-        self.start = time.perf_counter() * 1_000
+        self.start = time.time()
         return self
 
     def __exit__(self, *args):
-        self.end = time.perf_counter() * 1_000
+        self.end = time.time()
         self.elapsed_time = self.end - self.start
