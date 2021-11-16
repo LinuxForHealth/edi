@@ -206,7 +206,7 @@ class Hl7Analyzer(EdiAnalyzer):
 
     def analyze_message_data(self) -> Dict:
         """
-        Parses additional data from a HL7 TEXT message for the EDI Analysis.
+        Parses additional data from an HL7 TEXT message for the EDI Analysis.
         Sets the following fields:
         - specificationVersion
         - implementationVersions
@@ -236,7 +236,7 @@ class X12Analyzer(EdiAnalyzer):
 
     def analyze_message_data(self) -> Dict:
         """
-        Parses additional data from a X12 TEXT message for the EDI Analysis.
+        Parses additional data from an X12 TEXT message for the EDI Analysis.
         Sets the following fields:
         - specificationVersion
         - implementationVersions
