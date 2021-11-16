@@ -8,9 +8,9 @@ from enum import Enum
 from typing import List, Optional
 
 
-class BaseMessageType(str, Enum):
+class BaseMessageFormat(str, Enum):
     """
-    The base message type used for an EDI message
+    The base message format used for an EDI message
     """
 
     JSON = "JSON"
@@ -18,9 +18,9 @@ class BaseMessageType(str, Enum):
     XML = "XML"
 
 
-class EdiMessageType(str, Enum):
+class EdiMessageFormat(str, Enum):
     """
-    Supported EDI Message Types
+    Supported EDI Message Formats
     """
 
     CCDA = "C-CDA"
@@ -30,27 +30,13 @@ class EdiMessageType(str, Enum):
     X12 = "X12"
 
 
-class EdiOperations(str, Enum):
-    """
-    Supported EDI Operations
-    """
-
-    ANALYZE = "ANALYZE"
-    ENRICH = "ENRICH"
-    VALIDATE = "VALIDATE"
-    TRANSLATE = "TRANSLATE"
-    COMPLETE = "COMPLETE"
-    CANCEL = "CANCEL"
-    FAIL = "FAIL"
-
-
 class EdiMessageMetadata(BaseModel):
     """
     EDI message metadata including the message type, version, record count, etc.
     """
 
-    baseMessageType: BaseMessageType
-    messageType: EdiMessageType
+    baseMessageFormat: BaseMessageFormat
+    ediMessageFormat: EdiMessageFormat
     specificationVersion: str
     implementationVersions: List[str] = None
     messageSize: int
@@ -58,10 +44,11 @@ class EdiMessageMetadata(BaseModel):
     checksum: str
 
     class Config:
+        extra = "forbid"
         schema_extra = {
             "example": {
-                "baseMessageType": "TEXT",
-                "messageType": "X12",
+                "baseMessageFormat": "TEXT",
+                "ediMessageFormat": "X12",
                 "specificationVersion": "005010X279A1",
                 "implementationVersions": ["Supplemental Payer Guide"],
                 "messageSize": 509,
@@ -89,11 +76,12 @@ class EdiProcessingMetrics(BaseModel):
         )
 
     class Config:
+        extra = "forbid"
         schema_extra = {
             "example": {
                 "analyzeTime": 0.142347273,
                 "enrichTime": 0.013415911,
-                "validationTime": 0.013415911,
+                "validateTime": 0.013415911,
                 "translateTime": 2.625179046,
                 "totalTime": 2.794358141,
             }
@@ -107,17 +95,17 @@ class EdiResult(BaseModel):
 
     metadata: Optional[EdiMessageMetadata]
     metrics: Optional[EdiProcessingMetrics]
-    inputMessage: str
-    operations: List[EdiOperations]
-    errors: List[dict] = []
+    errors: List[str] = []
 
     class Config:
+        extra = "forbid"
         schema_extra = {
             "example": {
                 "metadata": {
-                    "baseMessageType": "TEXT",
-                    "messageType": "HL7",
-                    "specificationVersion": "2.6",
+                    "baseMessageFormat": "TEXT",
+                    "ediMessageFormat": "HL7",
+                    "specificationVersion": "v2",
+                    "implementationVersions": ["2.6"],
                     "messageSize": 509,
                     "recordCount": 17,
                     "checksum": "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",
@@ -125,17 +113,9 @@ class EdiResult(BaseModel):
                 "metrics": {
                     "analyzeTime": 0.142347273,
                     "enrichTime": 0.0,
-                    "validationTime": 0.013415911,
+                    "validateTime": 0.013415911,
                     "translateTime": 2.625179046,
                 },
-                "inputMessage": "EDI Message",
-                "operations": [
-                    "ANALYZE",
-                    "ENRICH",
-                    "VALIDATE",
-                    "TRANSLATE",
-                    "COMPLETE",
-                ],
                 "errors": [],
             }
         }

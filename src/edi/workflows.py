@@ -6,14 +6,14 @@ Defines EDI processing workflows.
 
 from typing import Any, Optional
 
-from .analysis import EdiAnalyzer
 from .models import (
     EdiMessageMetadata,
     EdiProcessingMetrics,
-    EdiOperations,
     EdiResult,
+    EdiMessageFormat,
 )
-from .support import Timer
+from .support import Timer, load_fhir_json, load_hl7, load_x12
+from .analysis import analyze
 import logging
 
 logger = logging.getLogger(__name__)
@@ -40,60 +40,67 @@ class EdiWorkflow:
         Configures the EdiProcess instance.
         Attributes include:
         - input_message: cached source message
+        - errors: error messages encountered during processing
+        - data_model: edi domain model (FHIR, HL7, X12, etc)
         - meta_data: EdiMessageMetadata object
         - metrics: EdiProcessingMetrics object
         - operations: List of EdiOperations completed for this instance
         """
 
         self.input_message = input_message
+        self.errors: List[str] = []
+        self.data_model = None
         self.meta_data: Optional[EdiMessageMetadata] = None
         self.metrics: EdiProcessingMetrics = EdiProcessingMetrics(
             analyzeTime=0.0, enrichTime=0.0, validateTime=0.0, translateTime=0.0
         )
         self.operations: Optional[EdiOperations] = []
 
-    @property
-    def current_state(self) -> EdiOperations:
-        """Returns the current operation state"""
-        return self.operations[-1] if self.operations else None
-
-    def analyze(self):
+    def _analyze(self):
         """
         Generates EdiMessageMetadata for the input message.
         """
-        with Timer() as t:
-            analyzer = EdiAnalyzer(self.input_message)
-            self.meta_data = analyzer.analyze()
-            self.operations.append(EdiOperations.ANALYZE)
+        try:
+            with Timer() as t:
+                self.meta_data = analyze(self.input_message)
 
-        self.metrics.analyzeTime = t.elapsed_time
+            self.metrics.analyzeTime = t.elapsed_time
+        except Exception as ex:
+            self._fail(f"An error occurred analyzing EDI {ex}")
 
-    def enrich(self):
+    def _enrich(self):
         """
         Adds additional data to the input message.
         """
-        with Timer() as t:
-            # TODO: enrichment implementation
-            self.operations.append(EdiOperations.ENRICH)
-        self.metrics.enrichTime = t.elapsed_time
+        pass
 
-    def validate(self):
+    def _validate(self):
         """
-        Validates the input message.
+        Validates the input message and populates the data_model instance attribute.
         """
-        with Timer() as t:
-            # TODO: validation implementation
-            self.operations.append(EdiOperations.VALIDATE)
-        self.metrics.validateTime = t.elapsed_time
+        try:
+            with Timer() as t:
+                edi_message_format = self.meta_data.ediMessageFormat
 
-    def translate(self):
+                if edi_message_format == EdiMessageFormat.FHIR:
+                    self.data_model = load_fhir_json(self.input_message)
+                elif edi_message_format == EdiMessageFormat.HL7:
+                    self.data_model = load_hl7(self.input_message)
+                elif edi_message_format == EdiMessageFormat.X12:
+                    self.data_model = load_x12(self.input_message)
+
+                if self.data_model is None:
+                    raise ValueError("Unable to load model")
+
+            self.metrics.validateTime = t.elapsed_time
+        except Exception as ex:
+            self._fail(f"An error occurred validating EDI {ex}")
+
+    def _translate(self):
         """
         Translates the input message to a different, supported format.
         """
-        with Timer() as t:
-            # TODO: validation implementation
-            self.operations.append(EdiOperations.TRANSLATE)
-        self.metrics.translateTime = t.elapsed_time
+        pass
 
     def _create_edi_result(self) -> EdiResult:
         """
@@ -102,69 +109,42 @@ class EdiWorkflow:
         result_data = {
             "metadata": self.meta_data.dict() if self.meta_data else None,
             "metrics": self.metrics.dict(),
-            "inputMessage": self.input_message,
-            "operations": self.operations,
-            "errors": [],
+            "errors": self.errors,
         }
 
         return EdiResult(**result_data)
 
-    def complete(self) -> EdiResult:
+    def _fail(self, *errors):
         """
-        Marks the workflow as completed and generates an EDI Result.
-        :return: EdiResult
+        Records errors which occurred during processing
+        :param errors: error messages encountered during processing
         """
-        self.operations.append(EdiOperations.COMPLETE)
-        return self._create_edi_result()
-
-    def cancel(self) -> EdiResult:
-        """
-        Marks the workflow as cancelled and generates an EDI Result.
-        :return: EdiResult
-        """
-        self.operations.append(EdiOperations.CANCEL)
-        return self._create_edi_result()
-
-    def fail(self, reason: str, exception: Exception = None):
-        """
-        Marks the workflow as cancelled and generates an EDI Result.
-        :param reason: The reason the workflow failed
-        :param exception: The associated exception object if available. Defaults to None
-        :return: EdiResult
-        """
-        self.operations.append(EdiOperations.FAIL)
-
-        edi_result = self._create_edi_result()
-        edi_result.errors.append({"msg": reason})
-
-        if exception:
-            edi_result.errors.append({"msg": str(exception)})
-        return edi_result
+        self.errors.extend(errors)
 
     def run(self, enrich=True, validate=True, translate=True):
         """
-        Convenience method used to run a workflow process.
-        By default the workflow process includes: analyze, enrich, validate, and translate, and is marked as completed.
-        The method paramee
+        Runs an EDI workflow process.
+
         :param enrich: Indicates if the enrich step is executed. Defaults to True.
         :param validate: Indicates if the validation step is executed. Defaults to True.
         :param translate: Indicates if the translate step is executed. Defaults to True.
         """
 
         try:
-            self.analyze()
+            self._analyze()
 
             if enrich:
-                self.enrich()
+                self._enrich()
 
             if validate:
-                self.validate()
+                self._validate()
 
             if translate:
-                self.translate()
+                self._translate()
 
-            return self.complete()
         except Exception as ex:
-            msg = "An error occurred executing the EdiProcessor workflow"
-            logger.exception(msg)
-            return self.fail(msg, ex)
+            msg = f"An error occurred executing the EdiWorkflow {ex}"
+            logger.exception(msg, ex)
+            self._fail(msg)
+        finally:
+            return self._create_edi_result()

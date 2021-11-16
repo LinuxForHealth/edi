@@ -78,28 +78,13 @@ def process_edi(args) -> EdiResult:
     - pretty: indicates if the output EDIResult is "pretty printed"
     """
     with open(args.edi_file) as f:
-        input_message = ",".join(f.readlines())
+        input_message = "".join(f.readlines())
 
     workflow: EdiWorkflow = EdiWorkflow(input_message)
-    workflow.analyze()
+    result = workflow.run(
+        enrich=args.enrich, validate=args.validate, translate=args.translate
+    )
 
-    if args.all:
-        workflow.enrich()
-        workflow.validate()
-        workflow.translate()
-        result = workflow.complete()
-        return result
-
-    if args.enrich:
-        workflow.enrich()
-
-    if args.validate:
-        workflow.validate()
-
-    if args.translate:
-        workflow.translate()
-
-    result = workflow.complete()
     return result
 
 
