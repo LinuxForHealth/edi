@@ -59,7 +59,8 @@ pytest
 ### CLI
 ```shell
 # run within project root directory
-cli -v -p demo-files/270.x12
+cli -v -p  src/tests/resources/270.x12
+
 ```
 EdiResult Output:
 ```json
