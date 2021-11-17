@@ -25,14 +25,13 @@ def test_analyze_fhir_json(fhir_json_message):
     assert edi_message_metadata.ediMessageFormat == EdiMessageFormat.FHIR
     assert edi_message_metadata.specificationVersion == "R4"
     assert edi_message_metadata.implementationVersions == [
-        "http://hl7.org/fhir/us/someprofile",
-        "http://hl7.org/fhir/us/otherprofile",
+        "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"
     ]
-    assert edi_message_metadata.messageSize == 309
+    assert edi_message_metadata.messageSize == 5985
     assert edi_message_metadata.recordCount == 1
     assert (
         edi_message_metadata.checksum
-        == "abdfddcc98c5b57df07e778d2235d391ef5781f067eb84a8bd7413ca8b566002"
+        == "b35938e815b23a1aa64784ced03f133491277094449915142950df26bf016781"
     )
 
 
@@ -47,11 +46,11 @@ def test_analyze_hl7(hl7_message):
     assert edi_message_metadata.ediMessageFormat == EdiMessageFormat.HL7
     assert edi_message_metadata.specificationVersion == "v2"
     assert edi_message_metadata.implementationVersions == ["2.6"]
-    assert edi_message_metadata.messageSize == 884
+    assert edi_message_metadata.messageSize == 892
     assert edi_message_metadata.recordCount == 8
     assert (
         edi_message_metadata.checksum
-        == "dce92fa2bb05ba55f975dcef9e9615d45e33981c36d46895f349886a87364d60"
+        == "852a588f4aae297db99807b1f7d1888f4927624d411335a730b8a325347b9873"
     )
 
 
@@ -61,9 +60,9 @@ def test_analyze_x12(x12_message):
     assert edi_message_metadata.ediMessageFormat == EdiMessageFormat.X12
     assert edi_message_metadata.specificationVersion == "005010"
     assert edi_message_metadata.implementationVersions == ["005010X279A1"]
-    assert edi_message_metadata.messageSize == 509
+    assert edi_message_metadata.messageSize == 494
     assert edi_message_metadata.recordCount == 17
     assert (
         edi_message_metadata.checksum
-        == "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409"
+        == "578b8f172f2039cfcc1ec4b37eb8a3976e50577fb085823abbfead071e68d1d8"
     )

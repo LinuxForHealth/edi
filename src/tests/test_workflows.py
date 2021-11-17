@@ -19,9 +19,9 @@ def test_workflow_run_hl7(hl7_message):
     expected_meta_data = {
         "baseMessageFormat": BaseMessageFormat.TEXT,
         "ediMessageFormat": EdiMessageFormat.HL7,
-        "checksum": "dce92fa2bb05ba55f975dcef9e9615d45e33981c36d46895f349886a87364d60",
+        "checksum": "852a588f4aae297db99807b1f7d1888f4927624d411335a730b8a325347b9873",
         "implementationVersions": ["2.6"],
-        "messageSize": 884,
+        "messageSize": 892,
         "recordCount": 8,
         "specificationVersion": "v2",
     }
@@ -39,9 +39,9 @@ def test_workflow_run_x12(x12_message):
     expected_meta_data = {
         "baseMessageFormat": BaseMessageFormat.TEXT,
         "ediMessageFormat": EdiMessageFormat.X12,
-        "checksum": "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",
+        "checksum": "578b8f172f2039cfcc1ec4b37eb8a3976e50577fb085823abbfead071e68d1d8",
         "implementationVersions": ["005010X279A1"],
-        "messageSize": 509,
+        "messageSize": 494,
         "recordCount": 17,
         "specificationVersion": "005010",
     }
@@ -59,12 +59,11 @@ def test_workflow_run_fhir_json(fhir_json_message):
     expected_meta_data = {
         "baseMessageFormat": BaseMessageFormat.JSON,
         "ediMessageFormat": EdiMessageFormat.FHIR,
-        "checksum": "abdfddcc98c5b57df07e778d2235d391ef5781f067eb84a8bd7413ca8b566002",
+        "checksum": "b35938e815b23a1aa64784ced03f133491277094449915142950df26bf016781",
         "implementationVersions": [
-            "http://hl7.org/fhir/us/someprofile",
-            "http://hl7.org/fhir/us/otherprofile",
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"
         ],
-        "messageSize": 309,
+        "messageSize": 5985,
         "recordCount": 1,
         "specificationVersion": "R4",
     }
