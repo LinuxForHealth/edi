@@ -12,6 +12,7 @@ class BaseMessageFormat(str, Enum):
     """
     The base message format used for an EDI message
     """
+
     BINARY = "BINARY"
     JSON = "JSON"
     TEXT = "TEXT"
