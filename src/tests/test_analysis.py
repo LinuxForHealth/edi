@@ -28,7 +28,6 @@ def test_analyze_fhir_json(fhir_json_message):
         "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"
     ]
     assert edi_message_metadata.messageSize == 5985
-    assert edi_message_metadata.recordCount == 1
     assert (
         edi_message_metadata.checksum
         == "b35938e815b23a1aa64784ced03f133491277094449915142950df26bf016781"
@@ -47,7 +46,6 @@ def test_analyze_hl7(hl7_message):
     assert edi_message_metadata.specificationVersion == "v2"
     assert edi_message_metadata.implementationVersions == ["2.6"]
     assert edi_message_metadata.messageSize == 892
-    assert edi_message_metadata.recordCount == 8
     assert (
         edi_message_metadata.checksum
         == "852a588f4aae297db99807b1f7d1888f4927624d411335a730b8a325347b9873"
@@ -61,7 +59,6 @@ def test_analyze_x12(x12_message):
     assert edi_message_metadata.specificationVersion == "005010"
     assert edi_message_metadata.implementationVersions == ["005010X279A1"]
     assert edi_message_metadata.messageSize == 494
-    assert edi_message_metadata.recordCount == 17
     assert (
         edi_message_metadata.checksum
         == "578b8f172f2039cfcc1ec4b37eb8a3976e50577fb085823abbfead071e68d1d8"

@@ -22,7 +22,6 @@ def test_workflow_run_hl7(hl7_message):
         "checksum": "852a588f4aae297db99807b1f7d1888f4927624d411335a730b8a325347b9873",
         "implementationVersions": ["2.6"],
         "messageSize": 892,
-        "recordCount": 8,
         "specificationVersion": "v2",
     }
 
@@ -42,7 +41,6 @@ def test_workflow_run_x12(x12_message):
         "checksum": "578b8f172f2039cfcc1ec4b37eb8a3976e50577fb085823abbfead071e68d1d8",
         "implementationVersions": ["005010X279A1"],
         "messageSize": 494,
-        "recordCount": 17,
         "specificationVersion": "005010",
     }
 
@@ -64,7 +62,6 @@ def test_workflow_run_fhir_json(fhir_json_message):
             "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"
         ],
         "messageSize": 5985,
-        "recordCount": 1,
         "specificationVersion": "R4",
     }
 

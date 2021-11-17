@@ -133,7 +133,6 @@ class FhirAnalyzer(EdiAnalyzer):
         Sets the following fields:
         - specificationVersion
         - implementationVersions
-        - recordCount
         :returns: dictionary
         """
         fhir_json = load_json(self.input_message)
@@ -142,12 +141,6 @@ class FhirAnalyzer(EdiAnalyzer):
             "specificationVersion": self._parse_json_specification_version(fhir_json),
             "implementationVersions": fhir_json.get("meta", {}).get("profile", []),
         }
-
-        if fhir_json.get("resourceType", "").lower() == "bundle":
-            record_count = len(fhir_json.get("entry", []))
-            data["recordCount"] = record_count
-        else:
-            data["recordCount"] = 1
 
         return data
 
@@ -168,7 +161,7 @@ class FhirAnalyzer(EdiAnalyzer):
 
             return namespace
 
-        data = {"recordCount": 1, "specificationVersion": "http://hl7.org/fhir"}
+        data = {"specificationVersion": "http://hl7.org/fhir"}
 
         fhir_xml = load_xml(self.input_message)
         fhir_namespace = _get_namespace(fhir_xml)
@@ -180,9 +173,6 @@ class FhirAnalyzer(EdiAnalyzer):
             data["implementationVersions"] = [
                 e.attrib["value"] for e in profile_elements
             ]
-
-        if "bundle" in fhir_xml.tag.lower():
-            data["record_count"] = len(fhir_xml.findall(fhir_namespace + "entry"))
 
         return data
 
@@ -217,14 +207,14 @@ class Hl7Analyzer(EdiAnalyzer):
         records = self.input_message.split("\r")
         data = {}
 
-        if records or not records[0][3:4]:
+        # validate that the message as records and a delimiter character
+        if records and records[0][3:4]:
             msh_record = records[0]
             delimiter = msh_record[3:4]
 
             implementation_version = msh_record.split(delimiter)[11]
             data["implementationVersions"] = [implementation_version]
             data["specificationVersion"] = f"v{implementation_version[0]}"
-            data["recordCount"] = len([r for r in records if r])
 
         return data
 
@@ -255,7 +245,6 @@ class X12Analyzer(EdiAnalyzer):
             data["specificationVersion"] = implementation_version[
                 0 : implementation_version.find("X")
             ]
-            data["recordCount"] = len([r for r in records if r])
 
         return data
 
