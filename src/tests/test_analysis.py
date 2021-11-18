@@ -63,3 +63,16 @@ def test_analyze_x12(x12_message):
         edi_message_metadata.checksum
         == "578b8f172f2039cfcc1ec4b37eb8a3976e50577fb085823abbfead071e68d1d8"
     )
+
+
+def test_analyze_dicom(dicom_message):
+    edi_message_metadata = analyze(dicom_message)
+    assert edi_message_metadata.baseMessageFormat == BaseMessageFormat.BINARY
+    assert edi_message_metadata.ediMessageFormat == EdiMessageFormat.DICOM
+    assert edi_message_metadata.specificationVersion is None
+    assert edi_message_metadata.implementationVersions == []
+    assert edi_message_metadata.messageSize == 14399514
+    assert (
+        edi_message_metadata.checksum
+        == "2a242a24c176abb27506e541659822b1132236656efa5d133dd7d5c745ed56ef"
+    )

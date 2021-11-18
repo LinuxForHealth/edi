@@ -36,3 +36,10 @@ def fhir_xml_message():
     file_path = os.path.join(resources_directory, "fhir-us-core-patient.xml")
     with open(file_path) as f:
         return "".join(f.readlines())
+
+
+@pytest.fixture
+def dicom_message():
+    file_path = os.path.join(resources_directory, "dcm_1.dcm")
+    with open(file_path, "rb") as f:
+        return f.read()

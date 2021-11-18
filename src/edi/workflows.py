@@ -4,7 +4,7 @@ workflows.py
 Defines EDI processing workflows.
 """
 
-from typing import Any, Optional
+from typing import Union, Optional
 
 from .models import (
     EdiMessageMetadata,
@@ -15,6 +15,7 @@ from .models import (
 from .support import Timer, load_fhir_json, load_hl7, load_x12
 from .analysis import analyze
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class EdiWorkflow:
         * fail - Reached if the workflow encounters an unrecoverable error. Returns an EDI result
     """
 
-    def __init__(self, input_message: Any):
+    def __init__(self, input_message: Union[bytes, str]):
         """
         Configures the EdiProcess instance.
         Attributes include:
@@ -88,6 +89,8 @@ class EdiWorkflow:
                     self.data_model = load_hl7(self.input_message)
                 elif edi_message_format == EdiMessageFormat.X12:
                     self.data_model = load_x12(self.input_message)
+                elif edi_message_format == EdiMessageFormat.DICOM:
+                    pass
 
                 if self.data_model is None:
                     raise ValueError("Unable to load model")
@@ -148,3 +151,23 @@ class EdiWorkflow:
             self._fail(msg)
         finally:
             return self._create_edi_result()
+
+
+def load_workflow_from_file(file_path: str) -> EdiWorkflow:
+    """
+    Loads an EDI workflow from an EDI file
+    :param file_path: The path to the EDI file
+    :returns: EdiWorkflow
+    """
+    with open(file_path, "rb") as f:
+        contents: bytes = f.read()
+
+    try:
+        buffer = contents[0:1024]
+        buffer.decode("utf-8")
+        is_unicode = True
+    except UnicodeDecodeError:
+        is_unicode = False
+
+    input_message = contents.decode("utf-8") if is_unicode else contents
+    return EdiWorkflow(input_message)

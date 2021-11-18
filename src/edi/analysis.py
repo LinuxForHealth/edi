@@ -9,7 +9,7 @@ edi_metadata: EdiMessageMetadata = analyze(input_message)
 import abc
 from enum import Enum
 import json
-from typing import Optional, Type, Dict
+from typing import Optional, Type, Dict, Union
 import logging
 
 from .models import EdiMessageMetadata, EdiMessageFormat, BaseMessageFormat
@@ -64,9 +64,16 @@ class EdiAnalyzer(metaclass=abc.ABCMeta):
         metadata_fields = {
             "baseMessageFormat": self.base_message_format.value,
             "ediMessageFormat": self.edi_message_format.value,
-            "messageSize": len(bytes(self.input_message.encode("utf-8"))),
             "checksum": create_checksum(self.input_message),
         }
+
+        # handle str and bytes
+        if isinstance(self.input_message, str):
+            metadata_fields["messageSize"] = len(
+                bytes(self.input_message.encode("utf-8"))
+            )
+        else:
+            metadata_fields["messageSize"] = len(self.input_message)
 
         additional_fields = self.analyze_message_data()
         metadata_fields.update(additional_fields)
@@ -200,7 +207,6 @@ class Hl7Analyzer(EdiAnalyzer):
         Sets the following fields:
         - specificationVersion
         - implementationVersions
-        - recordCount
         :returns: dictionary
         """
 
@@ -230,7 +236,6 @@ class X12Analyzer(EdiAnalyzer):
         Sets the following fields:
         - specificationVersion
         - implementationVersions
-        - recordCount
         :returns: dictionary
         """
         records = self.input_message.replace("\r", "").replace("\n", "").split("~")
@@ -249,12 +254,23 @@ class X12Analyzer(EdiAnalyzer):
         return data
 
 
-def _get_base_message_format(input_message: str) -> BaseMessageFormat:
-    """returns the base message format (JSON, XML, TEXT, etc) for a message"""
+class PassthroughAnalyzer(EdiAnalyzer):
+    """
+    Provides a "no-op" analysis for formats which do not support additional fields.
+    """
+
+    def analyze_message_data(self) -> Dict:
+        return {}
+
+
+def _get_base_message_format(input_message: Union[bytes, str]) -> BaseMessageFormat:
+    """returns the base message format (BINARY, JSON, XML, TEXT, etc) for a message"""
     base_message_format: Union[BaseMessageFormat, None] = None
     first_char = input_message.lstrip()[0:1]
 
-    if first_char in ("{", "["):
+    if isinstance(input_message, bytes):
+        base_message_format = BaseMessageFormat.BINARY
+    elif first_char in ("{", "["):
         base_message_format = BaseMessageFormat.JSON
     elif first_char == "<":
         base_message_format = BaseMessageFormat.XML
@@ -276,9 +292,8 @@ def _get_edi_message_format(
     """
     edi_message_format: Union[EdiMessageFormat, None] = None
 
-    first_chars = input_message.lstrip()[0:3]
-
     if base_message_format == BaseMessageFormat.TEXT:
+        first_chars = input_message.lstrip()[0:3]
         if first_chars.upper() == "MSH":
             edi_message_format = EdiMessageFormat.HL7
         elif first_chars.upper() == "ISA":
@@ -291,6 +306,10 @@ def _get_edi_message_format(
         xml_message = load_xml(input_message)
         if "http://hl7.org/fhir" in xml_message.tag.lower():
             raise NotImplementedError("FHIR Xml Support Is Not Implemented")
+    elif base_message_format == BaseMessageFormat.BINARY:
+        # test for DICOM identifier
+        if input_message[128:132] == "DICM".encode("utf-8"):
+            edi_message_format = EdiMessageFormat.DICOM
 
     if edi_message_format is None:
         raise ValueError("Unable to determine edi message format for input message")
@@ -298,24 +317,22 @@ def _get_edi_message_format(
     return edi_message_format
 
 
-def analyze(input_message: str):
+def analyze(input_message: Union[bytes, str]):
     """
     Returns an EdiMessageMetadata document for the given input message
 
+    :param input_message: The cached input message
     :raises: ValueError if the input message cannot be mapped to an analyzer
     :return: EdiMessageMetadata
     """
-    if (
-        input_message is None
-        or not input_message.strip()
-        or len(input_message) < MESSAGE_SAMPLE_SIZE
-    ):
+    if input_message is None or len(input_message) < MESSAGE_SAMPLE_SIZE:
         raise ValueError("Invalid input message")
 
     base_message_format: BaseMessageFormat = _get_base_message_format(input_message)
     edi_message_format: EdiMessageFormat = _get_edi_message_format(
         input_message, base_message_format
     )
+
     metadata_fields = {
         "base_message_format": base_message_format,
         "edi_message_format": edi_message_format,
@@ -328,6 +345,8 @@ def analyze(input_message: str):
         analyis_instance = Hl7Analyzer(input_message, **metadata_fields)
     elif edi_message_format == EdiMessageFormat.X12:
         analyis_instance = X12Analyzer(input_message, **metadata_fields)
+    elif edi_message_format == EdiMessageFormat.DICOM:
+        analyis_instance = PassthroughAnalyzer(input_message, **metadata_fields)
     else:
         raise ValueError("Unable to load analyzer for input message")
 

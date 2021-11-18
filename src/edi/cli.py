@@ -6,7 +6,7 @@ Implements a command line interface for the EDI service/application.
 import argparse
 
 from .models import EdiResult
-from .workflows import EdiWorkflow
+from .workflows import EdiWorkflow, load_workflow_from_file
 
 CLI_DESCRIPTION = """
 Analyze, Enrich, Validate and Translate EDI Messages using the LinuxForHealth CLI!
@@ -77,10 +77,7 @@ def process_edi(args) -> EdiResult:
     Additional kwargs used for processing:
     - pretty: indicates if the output EDIResult is "pretty printed"
     """
-    with open(args.edi_file) as f:
-        input_message = "".join(f.readlines())
-
-    workflow: EdiWorkflow = EdiWorkflow(input_message)
+    workflow: EdiWorkflow = load_workflow_from_file(args.edi_file)
     result = workflow.run(
         enrich=args.enrich, validate=args.validate, translate=args.translate
     )
