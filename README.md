@@ -93,13 +93,12 @@ Under Development
 ### SDK
 ```python
 import pprint
-from edi.workflows import EdiWorkflow
+from edi.workflows import load_workflow_from_file
 
-with open("./demo-files/270.x12") as f:
-    edi_message = ",".join(f.readlines())
-    edi = EdiWorkflow(edi_message)
-    edi_result = edi.run()
-    pprint.pprint(edi_result.dict())
+file_path = "src/tests/resources/270.x12"
+edi = load_workflow_from_file(file_path)
+edi_result = edi.run()
+pprint.pprint(edi_result.dict())
 ```
 
 prints the EdiResult
