@@ -29,7 +29,7 @@ EdiWorkflow Steps Include:
 
 Supported formats include: 
 * ASC X12 5010
-* C-CDA
+* C-CDA (in progress)
 * DICOM  
 * HL7v2
 * FHIR-R4, STU3, DTSU2
@@ -51,7 +51,7 @@ python3 -m pip install --upgrade pip setuptools
 git clone https://github.com/LinuxForHealth/edi
 cd edi
 
-python3 -m venv venv && source venv/bin/activate && pip install --upgrade pip setuptools 
+python3 -m venv venv && source venv/bin/activate && python3 -m pip install --upgrade pip setuptools 
 python3 -m pip install -e .[dev]
 pytest
 ```
@@ -59,7 +59,8 @@ pytest
 ### CLI
 ```shell
 # run within project root directory
-cli -v -p demo-files/270.x12
+cli -v -p  src/tests/resources/270.x12
+
 ```
 EdiResult Output:
 ```json
@@ -73,7 +74,6 @@ EdiResult Output:
             "005010X279A1"
         ],
         "messageSize": 494,
-        "recordCount": 17,
         "specificationVersion": "005010"
     },
     "metrics": {
@@ -92,13 +92,12 @@ Under Development
 ### SDK
 ```python
 import pprint
-from edi.workflows import EdiWorkflow
+from edi.workflows import load_workflow_from_file
 
-with open("./demo-files/270.x12") as f:
-    edi_message = ",".join(f.readlines())
-    edi = EdiWorkflow(edi_message)
-    edi_result = edi.run()
-    pprint.pprint(edi_result.dict())
+file_path = "src/tests/resources/270.x12"
+edi = load_workflow_from_file(file_path)
+edi_result = edi.run()
+pprint.pprint(edi_result.dict())
 ```
 
 prints the EdiResult
@@ -109,7 +108,6 @@ prints the EdiResult
               'ediMessageFormat': <EdiMessageFormat.X12: 'X12'>,
               'implementationVersions': ['005010X279A1'],
               'messageSize': 494,
-              'recordCount': 17,
               'specificationVersion': '005010'},
  'metrics': {'analyzeTime': 0.00016999244689941406,
              'enrichTime': 0.0,

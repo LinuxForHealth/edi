@@ -39,19 +39,19 @@ def workflow_fixture():
     [
         (
             "x12_message",
-            "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",
+            "578b8f172f2039cfcc1ec4b37eb8a3976e50577fb085823abbfead071e68d1d8",
         ),
         (
             "hl7_message",
-            "dce92fa2bb05ba55f975dcef9e9615d45e33981c36d46895f349886a87364d60",
+            "852a588f4aae297db99807b1f7d1888f4927624d411335a730b8a325347b9873",
         ),
         (
             "fhir_json_message",
-            "abdfddcc98c5b57df07e778d2235d391ef5781f067eb84a8bd7413ca8b566002",
+            "b35938e815b23a1aa64784ced03f133491277094449915142950df26bf016781",
         ),
         (
             "fhir_xml_message",
-            "c3331c97605865490503e779a697bdeeab5991517ce0655566e23e951b057dfe",
+            "843b106243a70e4713e3cf9b9477ce0c7b1aef6840dee6a77dafeba972875dee",
         ),
     ],
 )

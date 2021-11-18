@@ -13,6 +13,7 @@ class BaseMessageFormat(str, Enum):
     The base message format used for an EDI message
     """
 
+    BINARY = "BINARY"
     JSON = "JSON"
     TEXT = "TEXT"
     XML = "XML"
@@ -37,10 +38,9 @@ class EdiMessageMetadata(BaseModel):
 
     baseMessageFormat: BaseMessageFormat
     ediMessageFormat: EdiMessageFormat
-    specificationVersion: str
-    implementationVersions: List[str] = None
+    specificationVersion: Optional[str]
+    implementationVersions: List[str] = []
     messageSize: int
-    recordCount: int
     checksum: str
 
     class Config:
@@ -52,7 +52,6 @@ class EdiMessageMetadata(BaseModel):
                 "specificationVersion": "005010X279A1",
                 "implementationVersions": ["Supplemental Payer Guide"],
                 "messageSize": 509,
-                "recordCount": 17,
                 "checksum": "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",
             }
         }
@@ -107,7 +106,6 @@ class EdiResult(BaseModel):
                     "specificationVersion": "v2",
                     "implementationVersions": ["2.6"],
                     "messageSize": 509,
-                    "recordCount": 17,
                     "checksum": "d7a928f396efa0bb15277991bd8d4d9a2506d751f9de8b344c1a3e5f8c45a409",
                 },
                 "metrics": {
