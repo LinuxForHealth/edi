@@ -29,7 +29,7 @@ EdiWorkflow Steps Include:
 
 Supported formats include: 
 * ASC X12 5010
-* C-CDA
+* C-CDA (in progress)
 * DICOM  
 * HL7v2
 * FHIR-R4, STU3, DTSU2
@@ -74,7 +74,6 @@ EdiResult Output:
             "005010X279A1"
         ],
         "messageSize": 494,
-        "recordCount": 17,
         "specificationVersion": "005010"
     },
     "metrics": {
@@ -109,7 +108,6 @@ prints the EdiResult
               'ediMessageFormat': <EdiMessageFormat.X12: 'X12'>,
               'implementationVersions': ['005010X279A1'],
               'messageSize': 494,
-              'recordCount': 17,
               'specificationVersion': '005010'},
  'metrics': {'analyzeTime': 0.00016999244689941406,
              'enrichTime': 0.0,
