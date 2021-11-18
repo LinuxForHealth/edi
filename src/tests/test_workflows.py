@@ -71,6 +71,25 @@ def test_workflow_run_fhir_json(fhir_json_message):
     assert edi_result.metrics.validateTime > 0.0
 
 
+def test_workflow_run_dicom(dicom_message):
+    edi = EdiWorkflow(dicom_message)
+    edi_result = edi.run()
+
+    expected_meta_data = {
+        "baseMessageFormat": BaseMessageFormat.BINARY,
+        "ediMessageFormat": EdiMessageFormat.DICOM,
+        "checksum": "2a242a24c176abb27506e541659822b1132236656efa5d133dd7d5c745ed56ef",
+        "implementationVersions": [],
+        "messageSize": 14399514,
+        "specificationVersion": None,
+    }
+
+    assert len(edi_result.errors) == 0
+    assert edi_result.metadata == expected_meta_data
+    assert edi_result.metrics.analyzeTime > 0.0
+    assert edi_result.metrics.validateTime > 0.0
+
+
 def test_workflow_error(x12_message):
     invalid_x12 = x12_message.replace("HL*1**20*1~", "HL*1**720*1~")
     edi = EdiWorkflow(invalid_x12)

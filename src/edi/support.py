@@ -1,4 +1,5 @@
 import time
+from io import BytesIO
 from json import JSONDecodeError
 import json
 import logging
@@ -6,7 +7,8 @@ from typing import Union, List, Tuple
 from lxml import etree
 from lxml.etree import ParseError
 import hashlib
-from pydicom import FileDataset, dcmread
+from pydicom import dcmread
+from pydicom.fileset import FileSet
 from fhir.resources import construct_fhir_element as construct_fhir_r4
 from fhir.resources import FHIRAbstractModel as FHIRAbstractModelR4
 from fhir.resources.STU3 import construct_fhir_element as construct_fhir_stu3
@@ -104,8 +106,8 @@ def load_hl7(input_message: str) -> Message:
     return hl7.parse(input_message)
 
 
-def load_dicom(input_message: bytes) -> FileDataset:
-    pass
+def load_dicom(input_message: bytes) -> FileSet:
+    return dcmread(BytesIO(input_message))
 
 
 class Timer:

@@ -12,7 +12,7 @@ from .models import (
     EdiResult,
     EdiMessageFormat,
 )
-from .support import Timer, load_fhir_json, load_hl7, load_x12
+from .support import Timer, load_fhir_json, load_hl7, load_x12, load_dicom
 from .analysis import analyze
 import logging
 import os
@@ -90,7 +90,7 @@ class EdiWorkflow:
                 elif edi_message_format == EdiMessageFormat.X12:
                     self.data_model = load_x12(self.input_message)
                 elif edi_message_format == EdiMessageFormat.DICOM:
-                    pass
+                    self.data_model = load_dicom(self.input_message)
 
                 if self.data_model is None:
                     raise ValueError("Unable to load model")
