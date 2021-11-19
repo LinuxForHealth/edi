@@ -3,8 +3,8 @@ test_support.py
 
 Tests EDI support functions.
 """
-from edi.models import EdiProcessingMetrics
-from edi.support import (
+from linuxforhealth.edi.models import EdiProcessingMetrics
+from linuxforhealth.edi.support import (
     create_checksum,
     load_xml,
     load_json,

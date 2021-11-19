@@ -3,7 +3,7 @@ from io import BytesIO
 from json import JSONDecodeError
 import json
 import logging
-from typing import Union, List, Tuple
+from typing import Union, List
 from lxml import etree
 from lxml.etree import ParseError
 import hashlib
@@ -17,7 +17,7 @@ from fhir.resources.DSTU2 import construct_fhir_element as construct_fhir_dstu2
 from fhir.resources.DSTU2 import FHIRAbstractModel as FHIRAbstractModelDSTU2
 import hl7
 from hl7 import Message
-from x12.io import X12ModelReader, X12SegmentGroup
+from linuxforhealth.x12.io import X12ModelReader, X12SegmentGroup
 
 logger = logging.getLogger(__name__)
 

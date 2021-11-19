@@ -32,10 +32,10 @@ jobs:
     - name: Run EDI CLI
       run: |
         for f in src/tests/resources/*; do
-           cli -a $f 1> /dev/null
-           cli -e $f 1> /dev/null
-           cli -v $f 1> /dev/null
-           cli -t $f 1> /dev/null
-           cli -e -v -t -p $f 1> /dev/null
-           cli -p $f 1> /dev/null
+           lfhedi -a $f 1> /dev/null
+           lfhedi -e $f 1> /dev/null
+           lfhedi -v $f 1> /dev/null
+           lfhedi -t $f 1> /dev/null
+           lfhedi -e -v -t -p $f 1> /dev/null
+           lfhedi -p $f 1> /dev/null
         done

@@ -6,8 +6,8 @@ Tests for specific formats are implemented within separate modules named test_<f
 For example: test_fhir_analysis.py, test_x12_analysis.py, etc
 """
 import pytest
-from edi.analysis import analyze
-from edi.models import BaseMessageFormat, EdiMessageFormat
+from linuxforhealth.edi.analysis import analyze
+from linuxforhealth.edi.models import BaseMessageFormat, EdiMessageFormat
 
 
 @pytest.mark.parametrize(
