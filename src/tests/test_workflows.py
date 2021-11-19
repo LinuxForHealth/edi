@@ -3,12 +3,12 @@ test_workflows.py
 
 Tests the EdiProcessor workflow implementation
 """
-from edi.models import (
+from linuxforhealth.edi.models import (
     BaseMessageFormat,
     EdiMessageFormat,
     EdiProcessingMetrics,
 )
-from edi.workflows import EdiWorkflow
+from linuxforhealth.edi.workflows import EdiWorkflow
 import pytest
 
 
