@@ -32,6 +32,7 @@ jobs:
     - name: Run EDI CLI
       run: |
         for f in src/tests/resources/*; do
+           # FHIR XML is included for test cases but not supported as a message format
            [[ $f == "src/tests/resources/fhir-us-core-patient.xml" ]] && continue
            lfhedi -a $f 1> /dev/null
            lfhedi -e $f 1> /dev/null
