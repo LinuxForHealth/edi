@@ -32,7 +32,7 @@ jobs:
     - name: Run EDI CLI
       run: |
         for f in src/tests/resources/*; do
-           [[ $f == fhir-us-core-patient.xml ]] && continue
+           [[ $f == "src/tests/resources/fhir-us-core-patient.xml" ]] && continue
            lfhedi -a $f 1> /dev/null
            lfhedi -e $f 1> /dev/null
            lfhedi -v $f 1> /dev/null
