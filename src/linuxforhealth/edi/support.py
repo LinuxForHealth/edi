@@ -43,13 +43,7 @@ def load_json(message: str) -> dict:
     :param message: the input message
     :returns: The JSON object (dictionary) or None
     """
-    try:
-        json_message = json.loads(message)
-    except JSONDecodeError:
-        logger.exception("Error loading JSON message")
-        raise
-
-    return json_message
+    return json.loads(message)
 
 
 def load_xml(message: str):
@@ -59,17 +53,12 @@ def load_xml(message: str):
     :param message: the input message
     :returns: The XML object  or None
     """
-    try:
-        xml_message = etree.fromstring(message.encode("utf-8"))
-    except ParseError:
-        logger.exception("Error loading XML message")
-        raise
-    return xml_message
+    return etree.fromstring(message.encode("utf-8"))
 
 
 def load_fhir_json(
     input_message: str,
-) -> Union[FHIRAbstractModelR4, FHIRAbstractModelSTU3, FHIRAbstractModelDSTU2]:
+) -> Union[FHIRAbstractModelR4, FHIRAbstractModelSTU3, FHIRAbstractModelDSTU2, None]:
     """
     Loads a FHIR Json Resource into a domain model
     :param input_message: The message to load.
@@ -78,13 +67,10 @@ def load_fhir_json(
     parsed_data = json.loads(input_message)
     resource_type: str = parsed_data.get("resourceType")
     for c in (construct_fhir_r4, construct_fhir_stu3, construct_fhir_dstu2):
-        try:
-            fhir_resource = c(resource_type, parsed_data)
-            if fhir_resource:
-                return fhir_resource
-        except Exception as ex:
-            logger.debug(f"FHIR Resource is not compatible with {c.__name__}")
-            raise
+        fhir_resource = c(resource_type, parsed_data)
+        if fhir_resource:
+            return fhir_resource
+    return None
 
 
 def load_x12(input_message: str) -> List[X12SegmentGroup]:

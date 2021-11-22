@@ -10,6 +10,7 @@ from linuxforhealth.edi.models import (
 )
 from linuxforhealth.edi.workflows import EdiWorkflow
 import pytest
+from linuxforhealth.edi.exceptions import EdiValidationException, EdiAnalysisException
 
 
 def test_workflow_run_hl7(hl7_message):
@@ -25,7 +26,6 @@ def test_workflow_run_hl7(hl7_message):
         "specificationVersion": "v2",
     }
 
-    assert len(edi_result.errors) == 0
     assert edi_result.metadata == expected_meta_data
     assert edi_result.metrics.analyzeTime > 0.0
     assert edi_result.metrics.validateTime > 0.0
@@ -44,7 +44,6 @@ def test_workflow_run_x12(x12_message):
         "specificationVersion": "005010",
     }
 
-    assert len(edi_result.errors) == 0
     assert edi_result.metadata == expected_meta_data
     assert edi_result.metrics.analyzeTime > 0.0
     assert edi_result.metrics.validateTime > 0.0
@@ -65,7 +64,6 @@ def test_workflow_run_fhir_json(fhir_json_message):
         "specificationVersion": "R4",
     }
 
-    assert len(edi_result.errors) == 0
     assert edi_result.metadata == expected_meta_data
     assert edi_result.metrics.analyzeTime > 0.0
     assert edi_result.metrics.validateTime > 0.0
@@ -84,14 +82,15 @@ def test_workflow_run_dicom(dicom_message):
         "specificationVersion": None,
     }
 
-    assert len(edi_result.errors) == 0
     assert edi_result.metadata == expected_meta_data
     assert edi_result.metrics.analyzeTime > 0.0
     assert edi_result.metrics.validateTime > 0.0
 
 
-def test_workflow_error(x12_message):
+def test_workflow_exceptions(x12_message):
+    with pytest.raises(EdiAnalysisException):
+        EdiWorkflow("IS").run()
+
     invalid_x12 = x12_message.replace("HL*1**20*1~", "HL*1**720*1~")
-    edi = EdiWorkflow(invalid_x12)
-    edi_result = edi.run()
-    assert len(edi_result.errors) == 1
+    with pytest.raises(EdiValidationException):
+        EdiWorkflow(invalid_x12).run()
