@@ -94,7 +94,6 @@ class EdiResult(BaseModel):
 
     metadata: Optional[EdiMessageMetadata]
     metrics: Optional[EdiProcessingMetrics]
-    errors: List[str] = []
 
     class Config:
         extra = "forbid"
@@ -114,6 +113,5 @@ class EdiResult(BaseModel):
                     "validateTime": 0.013415911,
                     "translateTime": 2.625179046,
                 },
-                "errors": [],
             }
         }
