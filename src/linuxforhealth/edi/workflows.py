@@ -93,7 +93,8 @@ class EdiWorkflow:
                 elif edi_message_format == EdiMessageFormat.DICOM:
                     self.data_model = load_dicom(self.input_message)
             except Exception as ex:
-                raise EdiDataValidationException(str(ex))
+                msg = f"Exception occurred validating {self.meta_data.baseMessageFormat} {edi_message_format}"
+                raise EdiDataValidationException(msg) from ex
 
         self.metrics.validateTime = t.elapsed_time
 
@@ -128,7 +129,9 @@ class EdiWorkflow:
         except EdiDataValidationException:
             raise
         except Exception as ex:
-            raise EdiAnalysisException(f"An EDI Analyze Error Occurred {ex}") from ex
+            raise EdiAnalysisException(
+                f"An EDI Analyze Exception Occurred: {ex}"
+            ) from ex
 
         if enrich:
             self._enrich()
@@ -140,7 +143,7 @@ class EdiWorkflow:
                 raise
             except Exception as ex:
                 raise EdiValidationException(
-                    f"An EDI Validation Error Occurred {ex}"
+                    f"An EDI Validation Exception Occurred: {ex}"
                 ) from ex
 
         if translate:
