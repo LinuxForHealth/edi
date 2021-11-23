@@ -14,6 +14,7 @@ import logging
 
 from .models import EdiMessageMetadata, EdiMessageFormat, BaseMessageFormat
 from .support import load_json, load_xml, create_checksum
+from .exceptions import EdiDataValidationException
 
 from lxml.etree import _Element
 from fhir.resources import construct_fhir_element as construct_fhir_r4
@@ -115,6 +116,7 @@ class FhirAnalyzer(EdiAnalyzer):
         """
         Parses the input message using multiple passes to determine the FHIR specification version.
         :param fhir_json: The FHIR JSON resource
+        :raises: EdiDataValidationException if the specification version cannot be parsed
         :return: The specification version
         """
         resourceType = fhir_json.get("resourceType")
@@ -130,7 +132,9 @@ class FhirAnalyzer(EdiAnalyzer):
                 logger.debug(f"FHIR Resource is not compatible with {c.__name__}")
 
         if not specification_version:
-            raise ValueError("Resource is not compatible with FHIR R4, STU3, DSTU2")
+            raise EdiDataValidationException(
+                "Resource is not compatible with FHIR R4, STU3, DSTU2"
+            )
 
         return specification_version
 
@@ -220,7 +224,7 @@ class Hl7Analyzer(EdiAnalyzer):
 
             implementation_version = msh_record.split(delimiter)[11]
             data["implementationVersions"] = [implementation_version]
-            data["specificationVersion"] = f"v{implementation_version[0]}"
+            data["specificationVersion"] = f"V{implementation_version[0]}"
 
         return data
 
@@ -287,7 +291,7 @@ def _get_edi_message_format(
 
     :param input_message: The input message
     :param base_message_format: The base message format (JSON, XML, etc)
-    :raises: ValueError if the edi message format cannot be determined
+    :raises: EdiDataValidationException if the edi message format cannot be determined
     :raises: NotImplementedError if the edi message format is not supported
     """
     edi_message_format: Union[EdiMessageFormat, None] = None
@@ -312,7 +316,9 @@ def _get_edi_message_format(
             edi_message_format = EdiMessageFormat.DICOM
 
     if edi_message_format is None:
-        raise ValueError("Unable to determine edi message format for input message")
+        raise EdiDataValidationException(
+            "Unable to determine edi message format for input message"
+        )
 
     return edi_message_format
 
@@ -322,11 +328,11 @@ def analyze(input_message: Union[bytes, str]):
     Returns an EdiMessageMetadata document for the given input message
 
     :param input_message: The cached input message
-    :raises: ValueError if the input message cannot be mapped to an analyzer
+    :raises: EdiDataValidationException if the input message cannot be mapped to an analyzer
     :return: EdiMessageMetadata
     """
     if input_message is None or len(input_message) < MESSAGE_SAMPLE_SIZE:
-        raise ValueError("Invalid input message")
+        raise EdiDataValidationException("Invalid input message")
 
     base_message_format: BaseMessageFormat = _get_base_message_format(input_message)
     edi_message_format: EdiMessageFormat = _get_edi_message_format(
@@ -348,6 +354,6 @@ def analyze(input_message: Union[bytes, str]):
     elif edi_message_format == EdiMessageFormat.DICOM:
         analyis_instance = PassthroughAnalyzer(input_message, **metadata_fields)
     else:
-        raise ValueError("Unable to load analyzer for input message")
+        raise EdiDataValidationException("Unable to load analyzer for input message")
 
     return analyis_instance.analyze()

@@ -9,8 +9,13 @@ from linuxforhealth.edi.models import (
     EdiProcessingMetrics,
 )
 from linuxforhealth.edi.workflows import EdiWorkflow
+from linuxforhealth.edi.exceptions import (
+    EdiValidationException,
+    EdiAnalysisException,
+    EdiDataValidationException,
+)
 import pytest
-from linuxforhealth.edi.exceptions import EdiValidationException, EdiAnalysisException
+import json
 
 
 def test_workflow_run_hl7(hl7_message):
@@ -23,7 +28,7 @@ def test_workflow_run_hl7(hl7_message):
         "checksum": "852a588f4aae297db99807b1f7d1888f4927624d411335a730b8a325347b9873",
         "implementationVersions": ["2.6"],
         "messageSize": 892,
-        "specificationVersion": "v2",
+        "specificationVersion": "V2",
     }
 
     assert edi_result.metadata == expected_meta_data
@@ -87,10 +92,24 @@ def test_workflow_run_dicom(dicom_message):
     assert edi_result.metrics.validateTime > 0.0
 
 
-def test_workflow_exceptions(x12_message):
-    with pytest.raises(EdiAnalysisException):
+def test_x12_workflow_exception(x12_message):
+    with pytest.raises(EdiDataValidationException):
         EdiWorkflow("IS").run()
 
     invalid_x12 = x12_message.replace("HL*1**20*1~", "HL*1**720*1~")
-    with pytest.raises(EdiValidationException):
+    with pytest.raises(EdiDataValidationException):
         EdiWorkflow(invalid_x12).run()
+
+
+def test_fhir_workflow_exception(fhir_json_message):
+
+    fhir_dict = json.loads(fhir_json_message)
+    fhir_dict["resourceType"] = "NotARealResource"
+    with pytest.raises(EdiDataValidationException):
+        EdiWorkflow(json.dumps(fhir_dict)).run()
+
+
+def test_hl7_workflow_exception(hl7_message):
+    invalid_hl7 = hl7_message.replace("MSH|", "FISH|")
+    with pytest.raises(EdiDataValidationException):
+        EdiWorkflow(invalid_hl7).run()

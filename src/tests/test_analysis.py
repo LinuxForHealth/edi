@@ -8,6 +8,7 @@ For example: test_fhir_analysis.py, test_x12_analysis.py, etc
 import pytest
 from linuxforhealth.edi.analysis import analyze
 from linuxforhealth.edi.models import BaseMessageFormat, EdiMessageFormat
+from linuxforhealth.edi.exceptions import EdiDataValidationException
 
 
 @pytest.mark.parametrize(
@@ -15,7 +16,7 @@ from linuxforhealth.edi.models import BaseMessageFormat, EdiMessageFormat
     [None, "", "        ", "IS"],
 )
 def test_analyze_invalid_message(input_message):
-    with pytest.raises(ValueError):
+    with pytest.raises(EdiDataValidationException):
         analyze(input_message)
 
 
@@ -43,7 +44,7 @@ def test_analyze_hl7(hl7_message):
     edi_message_metadata = analyze(hl7_message)
     assert edi_message_metadata.baseMessageFormat == BaseMessageFormat.TEXT
     assert edi_message_metadata.ediMessageFormat == EdiMessageFormat.HL7
-    assert edi_message_metadata.specificationVersion == "v2"
+    assert edi_message_metadata.specificationVersion == "V2"
     assert edi_message_metadata.implementationVersions == ["2.6"]
     assert edi_message_metadata.messageSize == 892
     assert (
