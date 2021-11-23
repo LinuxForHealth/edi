@@ -5,6 +5,7 @@ Defines EDI processing workflows.
 """
 
 from typing import Union, Optional
+from pydantic import ValidationError
 
 from .models import (
     EdiMessageMetadata,
@@ -14,7 +15,11 @@ from .models import (
 )
 from .support import Timer, load_fhir_json, load_hl7, load_x12, load_dicom
 from .analysis import analyze
-from .exceptions import EdiAnalysisException, EdiValidationException
+from .exceptions import (
+    EdiAnalysisException,
+    EdiValidationException,
+    EdiDataValidationException,
+)
 import logging
 import os
 
@@ -78,14 +83,17 @@ class EdiWorkflow:
         with Timer() as t:
             edi_message_format = self.meta_data.ediMessageFormat
 
-            if edi_message_format == EdiMessageFormat.FHIR:
-                self.data_model = load_fhir_json(self.input_message)
-            elif edi_message_format == EdiMessageFormat.HL7:
-                self.data_model = load_hl7(self.input_message)
-            elif edi_message_format == EdiMessageFormat.X12:
-                self.data_model = load_x12(self.input_message)
-            elif edi_message_format == EdiMessageFormat.DICOM:
-                self.data_model = load_dicom(self.input_message)
+            try:
+                if edi_message_format == EdiMessageFormat.FHIR:
+                    self.data_model = load_fhir_json(self.input_message)
+                elif edi_message_format == EdiMessageFormat.HL7:
+                    self.data_model = load_hl7(self.input_message)
+                elif edi_message_format == EdiMessageFormat.X12:
+                    self.data_model = load_x12(self.input_message)
+                elif edi_message_format == EdiMessageFormat.DICOM:
+                    self.data_model = load_dicom(self.input_message)
+            except Exception as ex:
+                raise EdiDataValidationException(str(ex))
 
         self.metrics.validateTime = t.elapsed_time
 
@@ -117,6 +125,8 @@ class EdiWorkflow:
 
         try:
             self._analyze()
+        except EdiDataValidationException:
+            raise
         except Exception as ex:
             raise EdiAnalysisException(f"An EDI Analyze Error Occurred {ex}") from ex
 
@@ -126,6 +136,8 @@ class EdiWorkflow:
         if validate:
             try:
                 self._validate()
+            except EdiDataValidationException:
+                raise
             except Exception as ex:
                 raise EdiValidationException(
                     f"An EDI Validation Error Occurred {ex}"
