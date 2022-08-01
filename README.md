@@ -9,6 +9,7 @@
 ![GitHub Forks](https://img.shields.io/github/forks/linuxforhealth/edi)
 ![GitHub Stars](https://img.shields.io/github/stars/linuxforhealth/edi)
 
+THIS PROJECT IS ARCHIVED - Please follow https://github.com/linuxforhealth/HealthOS for current development updates.
 ## Overview
 
 LinuxForHealth EDI provides a standard workflow for processing health care data regardless of format. 
